@@ -5,7 +5,7 @@
 
 struct LayerBase
 {
-	virtual uint8_t *Forward() = 0;
+	virtual uint8_t *Forward(uint8_t* netInput) = 0;
 	virtual void Backward() = 0;
 };
 

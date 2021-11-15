@@ -1,5 +1,5 @@
-﻿#ifndef INPUT_TRANS_H_INCLUDED_
-#define INPUT_TRANS_H_INCLUDED_
+﻿#ifndef MNIST_TRANS_H_INCLUDED_
+#define MNIST_TRANS_H_INCLUDED_
 
 #include <vector>
 #include <cstdint>

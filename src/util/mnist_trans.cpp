@@ -1,4 +1,4 @@
-﻿#include "input_trans.h"
+﻿#include "mnist_trans.h"
 #include <iostream>
 #include <bitset>
 

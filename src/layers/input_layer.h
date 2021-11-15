@@ -3,11 +3,20 @@
 
 #include "layer.h"
 
-template <int OutputSize>
+template <int InputSize, int OutputSize>
 class InputLayer : LayerBase
 {
-	virtual uint8_t* Forward();
-	virtual void Backward();
+	static constexpr int kInputSize = InputSize;
+	static constexpr int kOutputSize = OutputSize;
+	static constexpr int kSimdBlockNum = kInputSize / SIMD_BIT_WIDTH;
+	
+	virtual uint8_t *Forward(uint8_t *netInput){
+		return netInput;
+	}
+
+	virtual void Backward(){
+		// 終端
+	}
 };
 
 #endif

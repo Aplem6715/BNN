@@ -43,6 +43,34 @@
 		"xtr1common": "cpp",
 		"xutility": "cpp",
 		"vector": "cpp",
-		"bitset": "cpp"
-	}
+		"bitset": "cpp",
+		"*.tcc": "cpp",
+		"any": "cpp",
+		"array": "cpp",
+		"chrono": "cpp",
+		"condition_variable": "cpp",
+		"cstdarg": "cpp",
+		"cwctype": "cpp",
+		"deque": "cpp",
+		"unordered_map": "cpp",
+		"algorithm": "cpp",
+		"functional": "cpp",
+		"map": "cpp",
+		"memory_resource": "cpp",
+		"optional": "cpp",
+		"ratio": "cpp",
+		"set": "cpp",
+		"string": "cpp",
+		"string_view": "cpp",
+		"fstream": "cpp",
+		"iomanip": "cpp",
+		"mutex": "cpp",
+		"sstream": "cpp",
+		"thread": "cpp",
+		"variant": "cpp"
+	},
+	"cSpell.words": [
+		"MNIST",
+		"xnor"
+	]
 }

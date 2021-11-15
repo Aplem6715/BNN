@@ -1,5 +1,5 @@
 ﻿
-#include "../src/input_trans.h"
+#include "../src/util/mnist_trans.h"
 #include "gtest/gtest.h"
 #include <bitset>
 
