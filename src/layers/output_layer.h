@@ -1,7 +1,7 @@
 ﻿#ifndef OUTPUT_LAYER_H_INCLUDED_
 #define OUTPUT_LAYER_H_INCLUDED_
 
-#include "layer.h"
+#include "layer_base.h"
 
 template <typename PrevLayer_t, int OutputSize>
 class OutputLayer : LayerBase
@@ -25,10 +25,10 @@ public:
 private:
 	// 前のレイヤー
 	PrevLayer_t _prevLayer;
-	// 順伝播 出力バッファ
-	int _outputBuffer[kOutputSize];
 	// 順伝播 重み
 	uint8_t _weights[kPaddedInputByteSize];
+	// 順伝播 出力バッファ(出力層はint)
+	int _outputBuffer[kOutputSize];
 
 #pragma region Train
 	// 前のレイヤーから受け取った入力値の履歴

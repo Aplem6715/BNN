@@ -3,7 +3,7 @@
 
 #include <intrin.h>
 #include <cassert>
-#include "layer.h"
+#include "layer_base.h"
 
 template <typename PrevLayer_t, int OutputSize>
 class DenseLayer : LayerBase

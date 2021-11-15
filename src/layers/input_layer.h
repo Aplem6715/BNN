@@ -1,7 +1,7 @@
 ﻿#ifndef INPUT_LAYER_H_INCLUDED_
 #define INPUT_LAYER_H_INCLUDED_
 
-#include "layer.h"
+#include "layer_base.h"
 
 template <int InputSize, int OutputSize>
 class InputLayer : LayerBase
