@@ -4,10 +4,10 @@
 #include "layer_base.h"
 
 template <typename PrevLayer_t, int OutputSize>
-class OutputLayer : LayerBase
+class OutputLayer : LayerBase<int>
 {
 public:
-	static constexpr int kInputBitSize = PrevLayer_t::kOutputBitSize;
+	static constexpr int kInputBitSize = PrevLayer_t::kOutputSize;
 	static constexpr int kPaddedInputBitSize = AddPaddingBitSize(kInputBitSize);
 	static constexpr int kPaddedInputByteSize = kPaddedInputBitSize / BIT_WIDTH;
 
@@ -18,7 +18,7 @@ public:
 	static_assert(kInputBitSize % BIT_WIDTH == 0, "入力データはBIT_WIDTH単位でないといけない");
 	// static constexpr size_t kWeightCount = kInputSize * kOutputBitSize;
 
-	virtual uint8_t *Forward(uint8_t *netInput);
+	virtual int *Forward(uint8_t *netInput);
 
 	virtual void Backward(const double *nextGrads);
 

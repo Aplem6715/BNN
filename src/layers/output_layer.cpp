@@ -1,7 +1,7 @@
 ﻿#include "output_layer.h"
 
 template <typename PrevLayer_t, int OutputSize>
-uint8_t *OutputLayer<PrevLayer_t, OutputSize>::Forward(uint8_t *netInput)
+int *OutputLayer<PrevLayer_t, OutputSize>::Forward(uint8_t *netInput)
 {
 	uint8_t *input = PrevLayer_t::Forward(netInput);
 

@@ -3,9 +3,10 @@
 
 #include "../net_common.h"
 
+template<typename OutputType>
 struct LayerBase
 {
-	virtual uint8_t *Forward(uint8_t* netInput) = 0;
+	virtual OutputType *Forward(uint8_t* netInput) = 0;
 	virtual void Backward(const double *nextGrads) = 0;
 };
 

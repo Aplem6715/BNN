@@ -6,13 +6,14 @@
 #include "layer_base.h"
 
 template <typename PrevLayer_t, int OutputSize>
-class DenseLayer : LayerBase
+class DenseLayer : LayerBase<uint8_t>
 {
 public:
-	static constexpr int kInputBitSize = PrevLayer_t::kOutputBitSize;
+	static constexpr int kInputBitSize = PrevLayer_t::kOutputSize;
 	static constexpr int kPaddedInputBitSize = AddPaddingBitSize(kInputBitSize);
 	static constexpr int kPaddedInputByteSize = kPaddedInputBitSize / BIT_WIDTH;
 
+	static constexpr int kOutputSize = OutputSize;
 	static constexpr int kOutputBitSize = OutputSize;
 	static constexpr int kPaddedOutputSize = AlignPopcntBitSize(kOutputBitSize);
 	static constexpr int kOutputByteSize = kPaddedOutputSize / BIT_WIDTH;
