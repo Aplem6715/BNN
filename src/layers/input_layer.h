@@ -4,21 +4,20 @@
 #include "layer_base.h"
 
 template <int InputSize, int OutputSize>
-class InputLayer : LayerBase<uint8_t>
-{
-public:
-	static constexpr int kOutputSize = OutputSize;
-	static constexpr int kInputBitSize = InputSize;
-	static constexpr int kOutputBitSize = OutputSize;
-	static constexpr int kSimdBlockNum = kInputBitSize / SIMD_BIT_WIDTH;
-	
-	virtual uint8_t *Forward(uint8_t *netInput){
-		return netInput;
-	}
+class InputLayer {
+   public:
+    static constexpr int kOutputSize    = OutputSize;
+    static constexpr int kInputBitSize  = InputSize;
+    static constexpr int kOutputBitSize = OutputSize;
+    static constexpr int kSimdBlockNum  = kInputBitSize / SIMD_BIT_WIDTH;
 
-	virtual void Backward(const double *nextGrads){
-		// 終端
-	}
+    uint8_t *Forward(uint8_t *netInput) { return netInput; }
+
+    void Backward(const double *nextGrads) {
+        // 終端
+    }
+
+    void ResetWeights() {}
 };
 
 #endif
