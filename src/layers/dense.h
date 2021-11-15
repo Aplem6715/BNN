@@ -27,7 +27,7 @@ class DenseLayer {
                   "出力データはBIT_WIDTH単位でないといけない");
     // static constexpr size_t kWeightCount = kInputSize * kOutputBitSize;
 
-    uint8_t *Forward(uint8_t *netInput) {
+    const uint8_t *Forward(uint8_t *netInput) {
         const auto input = _prevLayer.Forward(netInput);
 
         // TODO: SIMD化

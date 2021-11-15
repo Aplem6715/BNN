@@ -6,7 +6,7 @@
 template<typename OutputType>
 struct LayerBase
 {
-	virtual OutputType *Forward(uint8_t* netInput) = 0;
+	virtual const OutputType *Forward(uint8_t* netInput) = 0;
 	virtual void Backward(const double *nextGrads) = 0;
 };
 

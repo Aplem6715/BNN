@@ -18,7 +18,7 @@ class OutputLayer {
                   "入力データはBIT_WIDTH単位でないといけない");
     // static constexpr size_t kWeightCount = kInputSize * kOutputBitSize;
 
-    int *Forward(uint8_t *netInput) {
+    const int *Forward(uint8_t *netInput) {
         const auto input = _prevLayer.Forward(netInput);
 
         // TODO: SIMD化

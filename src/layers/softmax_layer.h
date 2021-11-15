@@ -9,12 +9,19 @@ class SoftmaxLayer : LayerBase<double> {
     static constexpr int kInputSize  = PrevLayer_t::kOutputSize;
     static constexpr int kOutputSize = kInputSize;
 
-    double *Forward(uint8_t *netInput) {
-        const auto input = _prevLayer.Forward(netInput);
+    const double *Forward(uint8_t *netInput) {
+        const int *input = _prevLayer.Forward(netInput);
+
+        int in_max = INT_MIN;
+        for (int i_out = 0; i_out < kOutputSize; ++i_out) {
+            if (input[i_out] > in_max) {
+                in_max = input[i_out];
+            }
+        }
 
         double sum = 0;
         for (int i_out = 0; i_out < kOutputSize; ++i_out) {
-            double exp = std::exp(input[i_out]);
+            double exp = std::exp(input[i_out] - in_max);
             sum += exp;
             _outputBuffer[i_out] = exp;
         }
