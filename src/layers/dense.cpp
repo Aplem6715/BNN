@@ -33,7 +33,7 @@ void DenseLayer<PrevLayer_t, OutputSize>::Backward(const double *nextGrads)
 	{
 		for (int j = 0; j < kInputBitSize; ++j)
 		{
-			double sum = 0;
+			double grad = 0;
 
 			int bit_block = j / BIT_WIDTH;
 			int bit_shift = BIT_WIDTH - (j % BIT_WIDTH);
@@ -43,12 +43,12 @@ void DenseLayer<PrevLayer_t, OutputSize>::Backward(const double *nextGrads)
 			{
 				for (int i = 0; i < kOutputBitSize; i++)
 				{
-					// sum += nextGrad * weight
-					sum += nextGrads[i] * 1/*ifブロック内でw_bitは必ず1*/;
+					//grad += nextGrad[i] * weight(ifブロック内でw_bitは必ず1)
+					grad += nextGrads[i] * 1;
 				}
 			}
 
-			_grads[i_batch][j] = sum;
+			_grads[i_batch][j] = grad;
 		}
 	}
 
