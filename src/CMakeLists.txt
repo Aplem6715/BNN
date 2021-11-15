@@ -9,6 +9,6 @@ function(print_list TITLE LIST)
     endforeach()
     message("")
 endfunction()
-print_list("GLOB RELATIVE ${CMAKE_SOURCE_DIR}/src" "${SOURCE}")
+# print_list("GLOB RELATIVE ${CMAKE_SOURCE_DIR}/src" "${SOURCE}")
 
 add_executable(BNN ${SOURCE})

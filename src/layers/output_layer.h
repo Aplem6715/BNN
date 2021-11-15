@@ -1,26 +1,21 @@
-﻿#ifndef DENSE_H_INCLUDED_
-#define DENSE_H_INCLUDED_
+﻿#ifndef OUTPUT_LAYER_H_INCLUDED_
+#define OUTPUT_LAYER_H_INCLUDED_
 
-#include <intrin.h>
-#include <cassert>
 #include "layer.h"
 
 template <typename PrevLayer_t, int OutputSize>
-class DenseLayer : LayerBase
+class OutputLayer : LayerBase
 {
 public:
 	static constexpr int kInputBitSize = PrevLayer_t::kOutputBitSize;
 	static constexpr int kPaddedInputBitSize = AddPaddingBitSize(kInputBitSize);
 	static constexpr int kPaddedInputByteSize = kPaddedInputBitSize / BIT_WIDTH;
 
-	static constexpr int kOutputBitSize = OutputSize;
-	static constexpr int kPaddedOutputSize = AlignPopcntBitSize(kOutputBitSize);
-	static constexpr int kOutputByteSize = kPaddedOutputSize / BIT_WIDTH;
+	static constexpr int kOutputSize = OutputSize;
 
 	static constexpr int kSimdBlockNum = kPaddedInputBitSize / SIMD_BIT_WIDTH;
 
 	static_assert(kInputBitSize % BIT_WIDTH == 0, "入力データはBIT_WIDTH単位でないといけない");
-	static_assert(kOutputBitSize % BIT_WIDTH == 0, "出力データはBIT_WIDTH単位でないといけない");
 	// static constexpr size_t kWeightCount = kInputSize * kOutputBitSize;
 
 	virtual uint8_t *Forward(uint8_t *netInput);
@@ -31,7 +26,7 @@ private:
 	// 前のレイヤー
 	PrevLayer_t _prevLayer;
 	// 順伝播 出力バッファ
-	uint8_t _outputBuffer[kOutputByteSize];
+	int _outputBuffer[kOutputSize];
 	// 順伝播 重み
 	uint8_t _weights[kPaddedInputByteSize];
 
@@ -42,5 +37,6 @@ private:
 	double _grads[kInputBitSize];
 #pragma endregion
 };
+
 
 #endif

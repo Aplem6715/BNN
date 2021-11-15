@@ -67,7 +67,8 @@
 		"mutex": "cpp",
 		"sstream": "cpp",
 		"thread": "cpp",
-		"variant": "cpp"
+		"variant": "cpp",
+		"cassert": "cpp"
 	},
 	"cSpell.words": [
 		"MNIST",
