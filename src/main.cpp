@@ -9,6 +9,7 @@ using Hidden1 = DenseLayer<Input, 4096>;
 using Hidden2 = DenseLayer<Hidden1, 4096>;
 using Network = SoftmaxLayer<OutputLayer<Input, 1>>;
 
+// TODO: アクティベーション層の分離：softmax, popsum
 int main(int, char **) {
     Network net;
     net.ResetWeights();

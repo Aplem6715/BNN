@@ -1,5 +1,6 @@
 {
 	"files.associations": {
+		"*.txt": "cmake",
 		"atomic": "cpp",
 		"bit": "cpp",
 		"cctype": "cpp",
@@ -68,7 +69,8 @@
 		"sstream": "cpp",
 		"thread": "cpp",
 		"variant": "cpp",
-		"cassert": "cpp"
+		"cassert": "cpp",
+		"random": "cpp"
 	},
 	"cSpell.words": [
 		"MNIST",

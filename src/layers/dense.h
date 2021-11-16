@@ -34,7 +34,7 @@ class DenseLayer {
         // TODO: パディング分のpop無視
         for (int i_out = 0; i_out < kPaddedOutputSize; ++i_out) {
             int outBlock            = i_out / BIT_WIDTH;
-            int outShift            = BIT_WIDTH - (i_out % BIT_WIDTH);
+            int outShift            = BIT_WIDTH - (i_out % BIT_WIDTH) - 1;
             int sum                 = 0;
             _outputBuffer[outBlock] = 0;
             for (int i_in = 0; i_in < kPaddedInputByteSize; ++i_in) {
@@ -56,7 +56,7 @@ class DenseLayer {
                 double grad = 0;
 
                 int bit_block = j / BIT_WIDTH;
-                int bit_shift = BIT_WIDTH - (j % BIT_WIDTH);
+                int bit_shift = BIT_WIDTH - (j % BIT_WIDTH) - 1;
                 int w_bit     = (_weights[bit_block] >> bit_shift) & 0x1;
                 // ウェイトが0の時はsumは増加しないのでループそのものをスキップ
                 if (w_bit == 1) {

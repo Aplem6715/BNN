@@ -1,7 +1,9 @@
 ﻿#ifndef OUTPUT_LAYER_H_INCLUDED_
 #define OUTPUT_LAYER_H_INCLUDED_
 
+#include "../util/random_real.h"
 #include "layer_base.h"
+
 
 template <typename PrevLayer_t, int OutputSize>
 class OutputLayer {
@@ -38,23 +40,34 @@ class OutputLayer {
     }
 
     void Backward(const double *nextGrads) {
+        for (int j = 0; j < kInputBitSize; ++j) {
+            _grads[j] = 0;
+        }
         for (int i_batch; i_batch < BATCH_SIZE; ++i_batch) {
             for (int j = 0; j < kInputBitSize; ++j) {
                 double sum = 0;
 
                 int bit_block = j / BIT_WIDTH;
-                int bit_shift = BIT_WIDTH - (j % BIT_WIDTH);
-                int w_bit     = (_weights[bit_block] >> bit_shift) & 0x1;
-                // ウェイトが0の時はsumは増加しないのでループそのものをスキップ
-                if (w_bit == 1) {
-                    for (int i = 0; i < kOutputSize; i++) {
-                        // sum += nextGrad * weight
-                        sum += nextGrads[i] * 1 /*ifブロック内でw_bitは必ず1*/;
-                    }
+                int bit_shift = BIT_WIDTH - (j % BIT_WIDTH) - 1;
+                int w_bit     = (_weights[bit_block] >> bit_shift);
+                double w      = (w_bit & 1) == 0 ? -1 : 1;
+                for (int i = 0; i < kOutputSize; i++) {
+                    // sum += nextGrad * weight
+                    sum += nextGrads[i] * w /*ifブロック内でw_bitは必ず1*/;
                 }
 
                 _grads[j] += sum;
             }
+        }
+        for (int j = 0; j < kInputBitSize; ++j) {
+            _real_weights[j] += _grads[j];
+            _real_weights[j] = std::max(-1.0, std::min(1.0, _real_weights[j]));
+
+            uint8_t newBit = rnd_prob01(mt) > _real_weights[j];
+
+            int bit_block = j / BIT_WIDTH;
+            int bit_shift = BIT_WIDTH - (j % BIT_WIDTH) - 1;
+            _weights[bit_block] = newBit << bit_shift;
         }
 
         // 手前の層へ逆伝播
@@ -81,6 +94,8 @@ class OutputLayer {
     uint8_t _batchInput[BATCH_SIZE][kPaddedInputByteSize];
     // 逆伝播 重み更新用の勾配
     double _grads[kInputBitSize];
+    // 逆伝播 重み更新用の実数ウェイト
+    double _real_weights[kInputBitSize];
 #pragma endregion
 };
 
