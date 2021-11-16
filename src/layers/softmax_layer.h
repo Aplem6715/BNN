@@ -4,7 +4,7 @@
 #include "layer_base.h"
 
 template <typename PrevLayer_t>
-class SoftmaxLayer : LayerBase<double> {
+class SoftmaxLayer : LayerBase<PrevLayer_t, double> {
    public:
     static constexpr int kInputSize  = PrevLayer_t::kOutputSize;
     static constexpr int kOutputSize = kInputSize;

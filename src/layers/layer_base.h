@@ -3,7 +3,7 @@
 
 #include "../net_common.h"
 
-template<typename OutputType>
+template<typename PrevLayer_t, typename OutputType>
 struct LayerBase
 {
 	virtual const OutputType *Forward(uint8_t* netInput) = 0;

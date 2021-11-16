@@ -5,5 +5,7 @@
 #include "layers/dense.h"
 #include "layers/output_layer.h"
 #include "layers/softmax_layer.h"
+#include "layers/sign_activation.h"
+#include "layers/affine.h"
 
 #endif

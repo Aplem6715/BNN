@@ -143,7 +143,7 @@ class DenseLayer {
     // 順伝播 出力バッファ
     uint8_t _outputBuffer[kOutputByteSize] = {0};
     // 順伝播 重み
-    uint8_t _weights[kPaddedInputByteSize][kPaddedOutputSize] = {0};
+    uint8_t _weights[kPaddedInputByteSize] = {0};
 
 #pragma region Train
     // 前のレイヤーから受け取った入力値の履歴
