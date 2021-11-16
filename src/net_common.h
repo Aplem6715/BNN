@@ -15,8 +15,8 @@ constexpr int AddPaddingBitSize(int bitSize)
 	return std::ceil(bitSize / (double)SIMD_BIT_WIDTH) * SIMD_BIT_WIDTH;
 }
 
-constexpr int AlignPopcntBitSize(int bitSize){
-	return std::ceil(bitSize / (double)POPCNT_BIT_WIDTH) * POPCNT_BIT_WIDTH;
-}
+// constexpr int AlignPopcntBitSize(int bitSize){
+// 	return std::ceil(bitSize / (double)POPCNT_BIT_WIDTH) * POPCNT_BIT_WIDTH;
+// }
 
 #endif

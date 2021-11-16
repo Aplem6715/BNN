@@ -3,21 +3,40 @@
 
 #include "layer_base.h"
 
-template <int InputSize, int OutputSize>
-class InputLayer {
-   public:
-    static constexpr int kOutputSize    = OutputSize;
-    static constexpr int kInputBitSize  = InputSize;
-    static constexpr int kOutputBitSize = OutputSize;
-    static constexpr int kSimdBlockNum  = kInputBitSize / SIMD_BIT_WIDTH;
+template <int InputSize>
+class InputLayer
+{
+public:
+	static constexpr int kOutputSize = InputSize;
+	static constexpr int kOutputBitSize = InputSize;
+	static constexpr int kPaddedOutputSize = AddPaddingBitSize(kOutputBitSize);
+	static constexpr int kOutputByteSize = std::ceil(kPaddedOutputSize / (float)BIT_WIDTH);
 
-    uint8_t *Forward(uint8_t *netInput) { return netInput; }
+	static constexpr int kInputBitSize  = InputSize;
+	static constexpr int kInputByteSize = std::ceil(kInputBitSize / (float)BIT_WIDTH);
+	static constexpr int kPaddedInputBitSize = AddPaddingBitSize(kInputBitSize);
 
-    void Backward(const double *nextGrads) {
-        // 終端
-    }
+	static_assert(kPaddedOutputSize % 8 == 0);
 
-    void ResetWeights() {}
+	uint8_t *Forward(uint8_t *netInput)
+	{
+		for (int i = 0; i < kInputByteSize; i++)
+		{
+			_outputBuffer[i] = netInput[i];
+		}
+		return _outputBuffer;
+	}
+
+	void Backward(const double *nextGrads)
+	{
+		// 終端
+	}
+
+	void ResetWeights() {}
+
+private:
+	// 順伝播 出力バッファ(出力層はint)
+	uint8_t _outputBuffer[kOutputByteSize] = {0};
 };
 
 #endif

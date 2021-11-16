@@ -70,7 +70,8 @@
 		"thread": "cpp",
 		"variant": "cpp",
 		"cassert": "cpp",
-		"random": "cpp"
+		"random": "cpp",
+		"numeric": "cpp"
 	},
 	"cSpell.words": [
 		"MNIST",
