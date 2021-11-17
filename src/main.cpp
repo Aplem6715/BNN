@@ -11,8 +11,8 @@ using OutLayer = AffineLayer<Hidden2, 2>;
 using Network = LinearActivation<OutLayer>;
 
 using RealInput = RealInputLayer<2>;
-using RealHidden1 = ReLULayer<RealDenseLayer<RealInput, 64>>;
-using RealHidden2 = ReLULayer<RealDenseLayer<RealHidden1, 32>>;
+using RealHidden1 = HTanhActivationLayer<RealDenseLayer<RealInput, 64>>;
+using RealHidden2 = HTanhActivationLayer<RealDenseLayer<RealHidden1, 32>>;
 using RealNetwork = RealDenseLayer<RealHidden2, 2>;
 
 void TrainReal(RealNetwork *net, int nbTrain)
