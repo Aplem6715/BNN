@@ -9,7 +9,7 @@ struct TrainableLayer : LayerBase<PrevLayer_t, OutputType>
 	using InType = PrevLayer_t::OutType;
 protected:
 	OutputType _outputBatchBuffer[BATCH_SIZE][kOutDim];
-	InType **_inputBufferPtr;
+	InType *_inputBufferPtr;
 	double _grads[BATCH_SIZE][kInDim];
 };
 

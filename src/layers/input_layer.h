@@ -25,22 +25,23 @@ public:
 		return _outputBuffer;
 	}
 
-	void ResetWeights() {}
+	void ResetWeight() {}
 
 #pragma region Train
-	BitType **BatchForward(uint8_t **netInput)
+	BitType *BatchForward(const uint8_t *netInput)
 	{
 		for (int batch = 0; batch < BATCH_SIZE; ++batch)
 		{
+			BitType *outputBuffer = &_outputBatchBuffer[batch * kSettingOutBytes];
 			for (int i = 0; i < kSettingOutBytes; ++i)
 			{
-				_outputBatchBuffer[batch][i] = netInput[batch][i];
+				outputBuffer[i] = netInput[batch * kSettingOutBytes + i];
 			}
 		}
 		return _outputBatchBuffer;
 	}
 
-	void BatchBackward(const double **nextLayerGrads)
+	void BatchBackward(const double *nextLayerGrads)
 	{
 		// 終端
 	}
@@ -51,7 +52,7 @@ private:
 	BitType _outputBuffer[kPaddedOutBytes] = {0};
 
 #pragma region Train
-	BitType _outputBatchBuffer[BATCH_SIZE][kPaddedOutBytes] = {0};
+	BitType _outputBatchBuffer[BATCH_SIZE * kPaddedOutBytes] = {0};
 #pragma endregion
 };
 

@@ -38,50 +38,45 @@ public:
 		return _outputBuffer;
 	}
 
-	// void Backward(const double *nextLayerGrads)
-	// {
-	// 	for (int i = 0; i < kSettingInDim; i++)
-	// 	{
-	// 		double x = nextLayerGrads[i];
-	// 		// Hard-tanh
-	// 		_grads[i] = std::max(-1.0, std::min(1.0, x));
-	// 	}
-	// 	_prevLayer.Backward(_grads);
-	// }
+	void ResetWeight(){
+		_prevLayer.ResetWeight();
+	}
 
 #pragma region Train
-	BitType **BatchForward(const uint8_t **netInput)
+	BitType *BatchForward(const uint8_t *netInput)
 	{
-		_inputBufferPtr = _prevLayer.BatchForward(netInput);
+		const RealType* _inputBufferPtr = _prevLayer.BatchForward(netInput);
 
 		ClearOutBatchBuffer();
 
 		for (int b = 0; b < BATCH_SIZE; b++)
 		{
-			double* batchInput = _inputBufferPtr[b];
-			BitType* batchOutput = _outputBatchBuffer[b];
+			const double* batchInput = &_inputBufferPtr[b*kSettingInDim];
+			BitType* batchOutput = &_outputBatchBuffer[b*kSettingInDim];
 			for (int i = 0; i < kSettingInDim; ++i)
 			{
 				int block = GetBlockIndex(i);
 				int shift = GetBitIndexInBlock(i);
 				// 確率論的Activation
 				double probPositive = batchInput[i];
-				uint8_t sign = GetRandReal() > probPositive;
+				uint8_t sign = GetRandReal() < probPositive;
 				batchOutput[block] |= sign << shift;
 			}
 		}
 		return _outputBatchBuffer;
 	}
 
-	void BatchBackward(const double **nextLayerGrads)
+	void BatchBackward(const double *nextLayerGrads)
 	{
 		for (int b = 0; b < BATCH_SIZE; ++b)
 		{
+			int batchShift = b * kSettingInDim;
+			double *grads = &_grads[batchShift];
 			for (int i = 0; i < kSettingInDim; ++i)
 			{
-				double x = nextLayerGrads[b][i];
+				double x = nextLayerGrads[batchShift + i];
 				// Hard-tanh (straight-through estimator)
-				_grads[b][i] = std::max(-1.0, std::min(1.0, x));
+				grads[i] = std::max(-1.0, std::min(1.0, x));
 			}
 		}
 		_prevLayer.BatchBackward(_grads);
@@ -90,7 +85,7 @@ public:
 
 private:
 	PrevLayer_t _prevLayer;
-	BitType _outputBuffer[kSettingOutBytes];
+	BitType _outputBuffer[kSettingOutBytes] = {0};
 	void ClearOutBuffer()
 	{
 		for (int i = 0; i < kSettingOutBytes; i++)
@@ -100,9 +95,8 @@ private:
 	}
 
 #pragma region Train
-	BitType _outputBatchBuffer[BATCH_SIZE][kSettingOutDim];
-	double **_inputBufferPtr;
-	double _grads[BATCH_SIZE][kSettingInDim];
+	BitType _outputBatchBuffer[BATCH_SIZE * kSettingOutDim] = {0};
+	double _grads[BATCH_SIZE * kSettingInDim];
 
 	void ClearOutBatchBuffer()
 	{
@@ -110,7 +104,7 @@ private:
 		{
 			for (int i = 0; i < kSettingOutBytes; i++)
 			{
-				_outputBuffer[b][i] = 0;
+				_outputBuffer[b * kSettingOutBytes + i] = 0;
 			}
 		}
 	}

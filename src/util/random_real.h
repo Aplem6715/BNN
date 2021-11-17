@@ -10,6 +10,10 @@ namespace Random
 	std::uniform_real_distribution<double> rnd_prob01(0.0, 1.0);
 }
 
+void RandomSeed(int seed){
+	Random::mt = std::mt19937(seed);
+}
+
 // 0~1の実数乱数を取得
 double GetRandReal()
 {
