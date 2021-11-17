@@ -4,9 +4,9 @@
 #include "layers.h"
 #include "util/mnist_trans.h"
 
-using Input = InputLayer<2>;
-using Hidden1 = DenseLayer<Input, 32>;
-using Hidden2 = DenseLayer<Hidden1, 32>;
+using Input = BitInputLayer<2>;
+using Hidden1 = SignActivation<AffineLayer<Input, 32>>;
+using Hidden2 = SignActivation<AffineLayer<Hidden1, 32>>;
 using Network = OutputLayer<Hidden2, 1>;
 
 void Train(Network *net, int nbTrain)

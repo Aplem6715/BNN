@@ -9,11 +9,6 @@ template <typename PrevLayer_t>
 class SignActivation
 {
 public:
-	using InType = typename PrevLayer_t::OutType;
-	using OutType = BitType;
-
-	static_assert(std::is_same<InType, ByteType>::value);
-
 #pragma region 出力サイズ関連
 	static constexpr int kSettingOutDim = PrevLayer_t::kSettingOutDim;
 	// 出力ビット幅（ニューロン数）
@@ -27,9 +22,9 @@ public:
 	static constexpr int kSettingInDim = PrevLayer_t::kSettingOutDim;
 #pragma endregion
 
-	const OutType *Forward(const uint8_t *netInput)
+	const BitType *Forward(const uint8_t *netInput)
 	{
-		const BitType *input = _prevLayer.Forward(netInput);
+		const IntType *input = _prevLayer.Forward(netInput);
 
 		ClearOutBuffer();
 
@@ -55,7 +50,7 @@ public:
 	// }
 
 #pragma region Train
-	OutType **BatchForward(const uint8_t **netInput)
+	BitType **BatchForward(const uint8_t **netInput)
 	{
 		_inputBufferPtr = _prevLayer.BatchForward(netInput);
 
@@ -63,13 +58,15 @@ public:
 
 		for (int b = 0; b < BATCH_SIZE; b++)
 		{
-			InType* batchInput = _inputBufferPtr[b];
-			OutType* batchOutput = _outputBatchBuffer[b];
+			double* batchInput = _inputBufferPtr[b];
+			BitType* batchOutput = _outputBatchBuffer[b];
 			for (int i = 0; i < kSettingInDim; ++i)
 			{
 				int block = GetBlockIndex(i);
 				int shift = GetBitIndexInBlock(i);
-				uint8_t sign = batchInput[i] > 0 ? 1 : 0;
+				// 確率論的Activation
+				double probPositive = batchInput[i];
+				uint8_t sign = GetRandReal() > probPositive;
 				batchOutput[block] |= sign << shift;
 			}
 		}
@@ -83,7 +80,7 @@ public:
 			for (int i = 0; i < kSettingInDim; ++i)
 			{
 				double x = nextLayerGrads[b][i];
-				// Hard-tanh
+				// Hard-tanh (straight-through estimator)
 				_grads[b][i] = std::max(-1.0, std::min(1.0, x));
 			}
 		}
@@ -93,7 +90,7 @@ public:
 
 private:
 	PrevLayer_t _prevLayer;
-	OutType _outputBuffer[kSettingOutBytes];
+	BitType _outputBuffer[kSettingOutBytes];
 	void ClearOutBuffer()
 	{
 		for (int i = 0; i < kSettingOutBytes; i++)
@@ -103,8 +100,8 @@ private:
 	}
 
 #pragma region Train
-	OutType _outputBatchBuffer[BATCH_SIZE][kSettingOutDim];
-	InType **_inputBufferPtr;
+	BitType _outputBatchBuffer[BATCH_SIZE][kSettingOutDim];
+	double **_inputBufferPtr;
 	double _grads[BATCH_SIZE][kSettingInDim];
 
 	void ClearOutBatchBuffer()

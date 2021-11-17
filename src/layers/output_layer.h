@@ -81,7 +81,7 @@ class OutputLayer {
 			_real_weights[j] -= _grads[j] * inputBit;
 			_real_weights[j] = std::max(-1.0, std::min(1.0, _real_weights[j]));
 
-			uint8_t newBit = rnd_prob01(mt) < ((_real_weights[j] + 1) / 2);
+			uint8_t newBit = GetRandReal() < ((_real_weights[j] + 1) / 2);
 
 			uint8_t mask = ~(1 << bit_shift);
 			_weights[bit_block] = (_weights[bit_block] & mask) | (newBit << bit_shift);
@@ -102,7 +102,7 @@ class OutputLayer {
 		{
 			int bit_block = i / BIT_WIDTH;
 			int bit_shift = BIT_WIDTH - (i % BIT_WIDTH) - 1;
-			_weights[bit_block] |= rnd() % 2 << bit_shift;
+			_weights[bit_block] |= GetRandUInt() % 2 << bit_shift;
 		}
 	}
 

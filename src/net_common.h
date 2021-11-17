@@ -6,6 +6,7 @@
 
 typedef uint8_t BitType;
 typedef uint8_t ByteType;
+typedef int IntType;
 typedef double RealType;
 
 constexpr int BATCH_SIZE = 32;
