@@ -15,16 +15,16 @@ public:
 	static_assert(std::is_same<InType, ByteType>::value);
 
 #pragma region 出力サイズ関連
-	static constexpr int kOutDim = PrevLayer_t::kOutDim;
+	static constexpr int kSettingOutDim = PrevLayer_t::kSettingOutDim;
 	// 出力ビット幅（ニューロン数）
-	static constexpr int kOutBitWidth = PrevLayer_t::kOutDim;
+	static constexpr int kSettingOutBits = PrevLayer_t::kSettingOutDim;
 	// 出力バイト数
-	static constexpr int kNumOutBytes = BitToByteSize(kOutBitWidth);
+	static constexpr int kSettingOutBytes = BitToByteSize(kSettingOutBits);
 #pragma endregion
 
 #pragma region 入力サイズ関連(前の層の値を引き継ぐ)
 	// 入力次元数
-	static constexpr int kInDim = PrevLayer_t::kOutDim;
+	static constexpr int kSettingInDim = PrevLayer_t::kSettingOutDim;
 #pragma endregion
 
 	const OutType *Forward(const uint8_t *netInput)
@@ -33,7 +33,7 @@ public:
 
 		ClearOutBuffer();
 
-		for (int i = 0; i < kInDim; ++i)
+		for (int i = 0; i < kSettingInDim; ++i)
 		{
 			int block = GetBlockIndex(i);
 			int shift = GetBitIndexInBlock(i);
@@ -45,7 +45,7 @@ public:
 
 	// void Backward(const double *nextLayerGrads)
 	// {
-	// 	for (int i = 0; i < kInDim; i++)
+	// 	for (int i = 0; i < kSettingInDim; i++)
 	// 	{
 	// 		double x = nextLayerGrads[i];
 	// 		// Hard-tanh
@@ -65,7 +65,7 @@ public:
 		{
 			InType* batchInput = _inputBufferPtr[b];
 			OutType* batchOutput = _outputBatchBuffer[b];
-			for (int i = 0; i < kInDim; ++i)
+			for (int i = 0; i < kSettingInDim; ++i)
 			{
 				int block = GetBlockIndex(i);
 				int shift = GetBitIndexInBlock(i);
@@ -80,7 +80,7 @@ public:
 	{
 		for (int b = 0; b < BATCH_SIZE; ++b)
 		{
-			for (int i = 0; i < kInDim; ++i)
+			for (int i = 0; i < kSettingInDim; ++i)
 			{
 				double x = nextLayerGrads[b][i];
 				// Hard-tanh
@@ -93,25 +93,25 @@ public:
 
 private:
 	PrevLayer_t _prevLayer;
-	OutType _outputBuffer[kNumOutBytes];
+	OutType _outputBuffer[kSettingOutBytes];
 	void ClearOutBuffer()
 	{
-		for (int i = 0; i < kNumOutBytes; i++)
+		for (int i = 0; i < kSettingOutBytes; i++)
 		{
 			_outputBuffer[i] = 0;
 		}
 	}
 
 #pragma region Train
-	OutType _outputBatchBuffer[BATCH_SIZE][kOutDim];
+	OutType _outputBatchBuffer[BATCH_SIZE][kSettingOutDim];
 	InType **_inputBufferPtr;
-	double _grads[BATCH_SIZE][kInDim];
+	double _grads[BATCH_SIZE][kSettingInDim];
 
 	void ClearOutBatchBuffer()
 	{
 		for (int b = 0; b < BATCH_SIZE; ++b)
 		{
-			for (int i = 0; i < kNumOutBytes; i++)
+			for (int i = 0; i < kSettingOutBytes; i++)
 			{
 				_outputBuffer[b][i] = 0;
 			}
