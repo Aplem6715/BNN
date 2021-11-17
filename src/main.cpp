@@ -10,6 +10,41 @@ using Hidden2 = SignActivation<AffineLayer<Hidden1, 32>>;
 using OutLayer = AffineLayer<Hidden2, 2>;
 using Network = LinearActivation<OutLayer>;
 
+using RealInput = RealInputLayer<2>;
+using RealHidden1 = ReLULayer<RealDenseLayer<RealInput, 64>>;
+using RealHidden2 = ReLULayer<RealDenseLayer<RealHidden1, 32>>;
+using RealNetwork = RealDenseLayer<RealHidden2, 2>;
+
+void TrainReal(RealNetwork *net, int nbTrain)
+{
+	double input[BATCH_SIZE * 2] = {0};
+	double diff[BATCH_SIZE * 2];
+	double lr = 0.001;
+	for (int i = 0; i < nbTrain; i++)
+	{
+		int x1 = GetRandUInt() % 2;
+		int x2 = GetRandUInt() % 2;
+		double teach[BATCH_SIZE * 2];
+		teach[0] = x1 ^ x2;
+		teach[1] = x1 ^ x2;
+		input[0] = x1;
+		input[1] = x2;
+		const double *pred = net->BatchForward(input);
+
+		double loss = 0;
+		for (int i = 0; i < 2; i++)
+		{
+			double t = teach[i];
+			double y = pred[i];
+			diff[i] = lr * (t - y);
+			loss += std::abs(t - y);
+		}
+		loss /= 2.0;
+		net->BatchBackward(diff);
+		std::cout << pred[0] << " - " << loss << std::endl;
+	}
+}
+
 void Train(Network *net, int nbTrain)
 {
 	uint8_t input[BATCH_SIZE * 1] = {0};
@@ -38,7 +73,7 @@ void Train(Network *net, int nbTrain)
 			{
 				double d = (2 * t * (t * y - 1));
 				d = std::max(-1.0, std::min(1.0, d));
-				diff[i] = lr * d;
+				diff[i] = lr * -(y - t) * d;
 			}
 			loss += std::max(0.0, 1 - t * y);
 		}
@@ -71,12 +106,12 @@ double Test(Network *net, int nbTest)
 int main(int, char **)
 {
 	RandomSeed(42);
-	Network net;
+	RealNetwork net;
 	net.ResetWeight();
 
-	for (int i = 0; i < 100; i++)
+	for (int i = 0; i < 1; i++)
 	{
-		Train(&net, 10000);
+		TrainReal(&net, 1000);
 		// std::cout << Test(&net, 100) << std::endl;
 	}
 

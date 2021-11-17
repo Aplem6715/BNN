@@ -6,5 +6,9 @@
 #include "layers/softmax_layer.h"
 #include "layers/sign_activation.h"
 #include "layers/affine.h"
+#include "real/real_input.h"
+#include "real/real_dense.h"
+#include "real/htanh_activation.h"
+#include "real/real_relu.h"
 
 #endif

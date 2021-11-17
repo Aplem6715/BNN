@@ -15,7 +15,7 @@
             "environment": [],
             "externalConsole": false,
             "MIMode": "gdb",
-            "miDebuggerPath": "F:/ProgramFiles/mingw-w64/mingw64/bin/gdb.exe",
+            "miDebuggerPath": "X:/ProgramFiles/MinGW-w64/mingw64/bin/gdb.exe",
             "setupCommands": [
                 {
                     "description": "gdb の再フォーマットを有効にする",
