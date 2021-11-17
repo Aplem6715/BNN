@@ -4,39 +4,55 @@
 #include "layer_base.h"
 
 template <int InputSize>
-class InputLayer
+class BitInputLayer
 {
 public:
-	static constexpr int kOutputSize = InputSize;
-	static constexpr int kOutputBitSize = InputSize;
-	static constexpr int kPaddedOutputSize = AddPaddingBitSize(kOutputBitSize);
-	static constexpr int kOutputByteSize = std::ceil(kPaddedOutputSize / (float)BIT_WIDTH);
+#pragma region 出力サイズ関連
+	static constexpr int kSettingOutDim = InputSize;
+	static constexpr int kSettingOutBytes = BitToByteSize(kSettingOutDim);
+	// SIMDパディング付き出力ビット幅
+	static constexpr int kPaddedOutBits = AddPaddingBitSize(kSettingOutDim);
+	// SIMDパディング付き出力バイト数
+	static constexpr int kPaddedOutBytes = BitToByteSize(kPaddedOutBits);
+#pragma endregion
 
-	static constexpr int kInputBitSize  = InputSize;
-	static constexpr int kInputByteSize = std::ceil(kInputBitSize / (float)BIT_WIDTH);
-	static constexpr int kPaddedInputBitSize = AddPaddingBitSize(kInputBitSize);
-
-	static_assert(kPaddedOutputSize % 8 == 0);
-
-	uint8_t *Forward(uint8_t *netInput)
+	BitType *Forward(const uint8_t *netInput)
 	{
-		for (int i = 0; i < kInputByteSize; i++)
+		for (int i = 0; i < kSettingOutBytes; i++)
 		{
 			_outputBuffer[i] = netInput[i];
 		}
 		return _outputBuffer;
 	}
 
-	void Backward(const double *nextGrads)
+	void ResetWeights() {}
+
+#pragma region Train
+	BitType **BatchForward(uint8_t **netInput)
+	{
+		for (int batch = 0; batch < BATCH_SIZE; ++batch)
+		{
+			for (int i = 0; i < kSettingOutBytes; ++i)
+			{
+				_outputBatchBuffer[batch][i] = netInput[batch][i];
+			}
+		}
+		return _outputBatchBuffer;
+	}
+
+	void BatchBackward(const double **nextLayerGrads)
 	{
 		// 終端
 	}
-
-	void ResetWeights() {}
+#pragma endregion
 
 private:
 	// 順伝播 出力バッファ(出力層はint)
-	uint8_t _outputBuffer[kOutputByteSize] = {0};
+	BitType _outputBuffer[kPaddedOutBytes] = {0};
+
+#pragma region Train
+	BitType _outputBatchBuffer[BATCH_SIZE][kPaddedOutBytes] = {0};
+#pragma endregion
 };
 
 #endif
