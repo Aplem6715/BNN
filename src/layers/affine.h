@@ -37,7 +37,6 @@ private:
 	PrevLayer_t _prevLayer;
 	RealType _outputBuffer[kSettingOutDim];
 	ByteType _weight[kSettingOutDim][kPaddedInBlocks] = {0};
-	double _bias[kSettingOutDim] = {0};
 
 #pragma region Train
 	RealType _outputBatchBuffer[BATCH_SIZE * kSettingOutDim];
@@ -59,7 +58,6 @@ public:
 	{
 		for (int i_out = 0; i_out < kSettingOutDim; ++i_out)
 		{
-			_bias[i_out] = 0;
 			for (int block = 0; block < kPaddedInBlocks; ++block)
 			{
 				_weight[i_out][block] = 0;
@@ -88,8 +86,8 @@ public:
 
 		for (int b = 0; b < BATCH_SIZE; ++b)
 		{
-			const BitType *batchInput = &_inputBufferPtr[b * BATCH_SIZE];
-			RealType *batchOutput = &_outputBatchBuffer[b * BATCH_SIZE];
+			const BitType *batchInput = &_inputBufferPtr[b * kPaddedInBlocks];
+			RealType *batchOutput = &_outputBatchBuffer[b * kSettingOutDim];
 			for (int i_out = 0; i_out < kSettingOutDim; ++i_out)
 			{
 				// パディング分も含めて±1積和演算
@@ -100,7 +98,7 @@ public:
 					pop += __popcnt64(xnor); // 8bitで十分だけど後々256bit演算になるので
 				}
 
-				batchOutput[i_out] = (2 * (pop - kPaddingInBits) - kSettingInDim) + _bias[i_out];
+				batchOutput[i_out] = (2 * (pop - kPaddingInBits) - kSettingInDim);
 			}
 		}
 
@@ -132,12 +130,6 @@ public:
 		{
 			const double *nextBatchGrad = &nextLayerGrads[batch * kSettingOutDim];
 			const BitType *batchInput = &_inputBufferPtr[batch * kSettingInBits];
-
-			// バイアスの調整(重みとループを分けて最適化されやすくしている)
-			for (int out = 0; out < kSettingOutDim; out++)
-			{
-				_bias[out] += nextBatchGrad[out];
-			}
 
 			// 重み調整幅を計算
 			for (int out = 0; out < kSettingOutDim; out++)
