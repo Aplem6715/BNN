@@ -38,21 +38,22 @@ public:
 		return _outputBuffer;
 	}
 
-	void ResetWeight(){
+	void ResetWeight()
+	{
 		_prevLayer.ResetWeight();
 	}
 
 #pragma region Train
 	BitType *BatchForward(const uint8_t *netInput)
 	{
-		const RealType* _inputBufferPtr = _prevLayer.BatchForward(netInput);
+		_inputBufferPtr = _prevLayer.BatchForward(netInput);
 
 		ClearOutBatchBuffer();
 
 		for (int b = 0; b < BATCH_SIZE; b++)
 		{
-			const double* batchInput = &_inputBufferPtr[b*kSettingInDim];
-			BitType* batchOutput = &_outputBatchBuffer[b*kSettingInDim];
+			const double *batchInput = &_inputBufferPtr[b * kSettingInDim];
+			BitType *batchOutput = &_outputBatchBuffer[b * kSettingInDim];
 			for (int i = 0; i < kSettingInDim; ++i)
 			{
 				int block = GetBlockIndex(i);
@@ -71,12 +72,9 @@ public:
 		for (int b = 0; b < BATCH_SIZE; ++b)
 		{
 			int batchShift = b * kSettingInDim;
-			double *grads = &_grads[batchShift];
 			for (int i = 0; i < kSettingInDim; ++i)
 			{
-				double x = nextLayerGrads[batchShift + i];
-				// Hard-tanh (straight-through estimator)
-				grads[i] = std::max(-1.0, std::min(1.0, x));
+				_grads[batchShift + i] = std::max(-1.0, std::min(1.0, nextLayerGrads[batchShift + i]));
 			}
 		}
 		_prevLayer.BatchBackward(_grads);
@@ -85,6 +83,7 @@ public:
 
 private:
 	PrevLayer_t _prevLayer;
+	RealType *_inputBufferPtr;
 	BitType _outputBuffer[kSettingOutBytes] = {0};
 	void ClearOutBuffer()
 	{

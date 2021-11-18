@@ -6,10 +6,11 @@
 #include "../util/random_real.h"
 
 template <typename PrevLayer_t, int OutputSize>
-class AffineLayer {
+class AffineLayer
+{
 public:
 #pragma region 出力サイズ関連
-    static constexpr int kSettingOutDim = OutputSize;
+	static constexpr int kSettingOutDim = OutputSize;
 	// // SIMDパディング付き出力ビット幅
 	// static constexpr int kPaddedOutBitWidth = AddPaddingBitSize(kSettingOutDim);
 	// // SIMDパディング付き出力バイト数
@@ -105,9 +106,9 @@ public:
 				double sum = 0;
 				for (int out = 0; out < kSettingOutDim; ++out)
 				{
-					// uint8_t w_bit = (_weight[out][block] >> shift) & 0x1;
-					// sum += nextBatchGrad[out] * w_bit;
-					sum += nextBatchGrad[out] * _realWeight[out][in];
+					uint8_t w_bit = (_weight[out][block] >> shift) & 0x1;
+					sum += nextBatchGrad[out] * (w_bit == 1 ? 1 : -1);
+					// sum += nextBatchGrad[out] * _realWeight[out][in];
 				}
 				grads[in] = sum;
 			}
@@ -125,8 +126,8 @@ public:
 					int block = GetBlockIndex(in);
 					uint8_t shift = GetBitIndexInBlock(in);
 					uint8_t in_bit = (batchInput[block] >> shift) & 0x01;
-					// int realIn = (in_bit == 1) ? 1 : -1;
-					_realWeight[out][in] += nextBatchGrad[out] * in_bit;
+					double realIn = (in_bit == 1) ? 1 : -1;
+					_realWeight[out][in] += nextBatchGrad[out] * realIn;
 				}
 			}
 		}

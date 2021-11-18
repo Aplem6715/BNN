@@ -72,8 +72,8 @@ void Train(Network *net, int nbTrain)
 			else
 			{
 				double d = (2 * t * (t * y - 1));
-				d = std::max(-1.0, std::min(1.0, d));
-				diff[i] = lr * -(y - t) * d;
+				// d = std::max(-1.0, std::min(1.0, d));
+				diff[i] = lr * d;
 			}
 			loss += std::max(0.0, 1 - t * y);
 		}
@@ -106,12 +106,12 @@ double Test(Network *net, int nbTest)
 int main(int, char **)
 {
 	RandomSeed(42);
-	RealNetwork net;
+	Network net;
 	net.ResetWeight();
 
 	for (int i = 0; i < 1; i++)
 	{
-		TrainReal(&net, 1000);
+		Train(&net, 1000);
 		// std::cout << Test(&net, 100) << std::endl;
 	}
 
