@@ -16,6 +16,15 @@ public:
 	static constexpr int kPaddedOutBytes = BitToByteSize(kPaddedOutBits);
 #pragma endregion
 
+private:
+	// 順伝播 出力バッファ(出力層はint)
+	BitType _outputBuffer[kPaddedOutBytes] = {0};
+
+#pragma region Train
+	BitType _outputBatchBuffer[BATCH_SIZE * kPaddedOutBytes] = {0};
+#pragma endregion
+
+public:
 	BitType *Forward(const uint8_t *netInput)
 	{
 		for (int i = 0; i < kSettingOutBytes; i++)
@@ -32,7 +41,7 @@ public:
 	{
 		for (int batch = 0; batch < BATCH_SIZE; ++batch)
 		{
-			BitType *outputBuffer = &_outputBatchBuffer[batch * kSettingOutBytes];
+			BitType *outputBuffer = &_outputBatchBuffer[batch * kPaddedOutBytes];
 			for (int i = 0; i < kSettingOutBytes; ++i)
 			{
 				outputBuffer[i] = netInput[batch * kSettingOutBytes + i];
@@ -47,13 +56,6 @@ public:
 	}
 #pragma endregion
 
-private:
-	// 順伝播 出力バッファ(出力層はint)
-	BitType _outputBuffer[kPaddedOutBytes] = {0};
-
-#pragma region Train
-	BitType _outputBatchBuffer[BATCH_SIZE * kPaddedOutBytes] = {0};
-#pragma endregion
 };
 
 #endif

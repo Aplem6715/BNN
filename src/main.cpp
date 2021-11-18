@@ -4,11 +4,17 @@
 #include "layers.h"
 #include "util/mnist_trans.h"
 
-using Input = BitInputLayer<2>;
-using Hidden1 = SignActivation<BatchNormalization<AffineLayer<Input, 64>>>;
-using Hidden2 = SignActivation<BatchNormalization<AffineLayer<Hidden1, 32>>>;
-using OutLayer = BatchNormalization<AffineLayer<Hidden2, 2>>;
+using Input = IntInputLayer<2>;
+using Hidden1 = IntSignActivation<IntAffineLayer<Input, 512>>;
+using Hidden2 = IntSignActivation<IntAffineLayer<Hidden1, 256>>;
+using OutLayer = IntAffineLayer<Hidden2, 2>;
 using Network = OutLayer;
+
+// using Input = BitInputLayer<2>;
+// using Hidden1 = SignActivation<AffineLayer<Input, 16>>;
+// using Hidden2 = SignActivation<AffineLayer<Hidden1, 8>>;
+// using OutLayer = AffineLayer<Hidden2, 2>;
+// using Network = OutLayer;
 
 using RealInput = RealInputLayer<2>;
 using RealHidden1 = HTanhActivationLayer<RealDenseLayer<RealInput, 64>>;
@@ -47,7 +53,7 @@ void TrainReal(RealNetwork *net, int nbTrain)
 
 void Train(Network *net, int nbTrain)
 {
-	uint8_t input[BATCH_SIZE * 1] = {0};
+	uint8_t input[BATCH_SIZE * 2] = {0};
 	double teach[BATCH_SIZE * 2] = {0};
 	double diff[BATCH_SIZE * 2];
 	double lr = 0.001;
@@ -58,12 +64,14 @@ void Train(Network *net, int nbTrain)
 		{
 			int x1 = GetRandUInt() % 2;
 			int x2 = GetRandUInt() % 2;
-			input[b] = (uint8_t)(x1 << 7) + (uint8_t)(x2 << 6);
-			teach[b * 2] = (x1 ^ x2) == 0 ? 1 : -1;
-			teach[b * 2 + 1] = (x1 ^ x2) == 1 ? 1 : -1;
+			// input[b] = (uint8_t)(x1 << 7) + (uint8_t)(x2 << 6);
+			input[b * 2] = x1;
+			input[b * 2 + 1] = x2;
+			teach[b * 2] = (x1 ^ x2) == 0 ? 128 : -128;
+			teach[b * 2 + 1] = (x1 ^ x2) == 1 ? 128 : -128;
 		}
 
-		const double *pred = net->BatchForward(input);
+		const int8_t *pred = net->BatchForward(input);
 
 		for (int b = 0; b < BATCH_SIZE; b++)
 		{
@@ -75,6 +83,7 @@ void Train(Network *net, int nbTrain)
 				double t = teach[idx];
 				diff[idx] = t - y;
 				loss += (y - t) * (y - t) * 0.5;
+				// std::cout << y << " : " << t << std::endl;
 			}
 			loss /= 2.0;
 			total_loss += loss;
@@ -82,7 +91,6 @@ void Train(Network *net, int nbTrain)
 		total_loss /= BATCH_SIZE;
 
 		net->BatchBackward(diff);
-		std::cout << pred[0] << " - " << total_loss << std::endl;
 	}
 	std::cout << total_loss << std::endl;
 }
@@ -99,7 +107,7 @@ double Test(Network *net, int nbTest)
 		double teach = x1 ^ x2;
 		input[0] = (x1 << 1) + x2;
 
-		const double *pred = net->Forward(input);
+		const int8_t *pred = net->Forward(input);
 
 		error += std::abs(teach - pred[0]);
 	}
@@ -113,9 +121,9 @@ int main(int, char **)
 	Network net;
 	net.ResetWeight();
 
-	for (int i = 0; i < 10; i++)
+	for (int i = 0; i < 100; i++)
 	{
-		Train(&net, 1000);
+		Train(&net, 100);
 		// std::cout << Test(&net, 100) << std::endl;
 	}
 

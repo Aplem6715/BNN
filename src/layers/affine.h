@@ -4,6 +4,7 @@
 #include <intrin.h>
 #include "../net_common.h"
 #include "../util/random_real.h"
+#include "../tensor/Tensor.h"
 
 template <typename PrevLayer_t, int OutputSize>
 class AffineLayer
@@ -41,7 +42,7 @@ private:
 #pragma region Train
 	RealType _outputBatchBuffer[BATCH_SIZE * kSettingOutDim];
 	BitType *_inputBufferPtr;
-	double _realWeight[kSettingOutDim][kPaddedInBlocks] = {0};
+	double _realWeight[kSettingOutDim][kSettingInBits] = {0};
 	double _weightDiff[BATCH_SIZE][kSettingOutDim][kSettingInBits] = {0};
 	double _grads[BATCH_SIZE * kSettingInDim] = {0};
 #pragma endregion
@@ -98,7 +99,8 @@ public:
 					pop += __popcnt64(xnor); // 8bitで十分だけど後々256bit演算になるので
 				}
 
-				batchOutput[i_out] = (2 * (pop - kPaddingInBits) - kSettingInDim);
+				int sum = (2 * (pop - kPaddingInBits) - kSettingInDim);
+				batchOutput[i_out] = sum;
 			}
 		}
 
@@ -129,7 +131,7 @@ public:
 		for (int batch = 0; batch < BATCH_SIZE; ++batch)
 		{
 			const double *nextBatchGrad = &nextLayerGrads[batch * kSettingOutDim];
-			const BitType *batchInput = &_inputBufferPtr[batch * kSettingInBits];
+			const BitType *batchInput = &_inputBufferPtr[batch * kPaddedInBlocks];
 
 			// 重み調整幅を計算
 			for (int out = 0; out < kSettingOutDim; out++)
