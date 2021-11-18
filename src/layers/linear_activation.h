@@ -24,7 +24,8 @@ public:
 		return _outputBuffer;
 	}
 
-	void ResetWeight(){
+	void ResetWeight()
+	{
 		_prevLayer.ResetWeight();
 	}
 
@@ -35,8 +36,8 @@ public:
 
 		for (int b = 0; b < BATCH_SIZE; b++)
 		{
-			double *batchInput = &_inputBufferPtr[b*kSettingInDim];
-			IntType *batchOutput = &_outputBatchBuffer[b*kSettingInDim];
+			double *batchInput = &_inputBufferPtr[b * kSettingInDim];
+			IntType *batchOutput = &_outputBatchBuffer[b * kSettingInDim];
 			for (int i = 0; i < kSettingInDim; ++i)
 			{
 				batchOutput[i] = batchInput[i] > 0.5 ? 1 : -1;
@@ -47,16 +48,24 @@ public:
 
 	void BatchBackward(const double *nextLayerGrads)
 	{
-		// for (int b = 0; b < BATCH_SIZE; ++b)
-		// {
-		// 	int batchShift = b * kSettingInDim;
-		// 	for (int i = 0; i < kSettingInDim; ++i)
-		// 	{
-		// 		double x = nextLayerGrads[batchShift + i];
-		// 		// Hard-tanh (straight-through estimator)
-		// 		_grads[batchShift + i] = std::max(-1.0, std::min(1.0, x));
-		// 	}
-		// }
+		for (int b = 0; b < BATCH_SIZE; ++b)
+		{
+			int batchShift = b * kSettingInDim;
+			for (int i = 0; i < kSettingInDim; ++i)
+			{
+				double x = nextLayerGrads[batchShift + i];
+				if (std::abs(_inputBufferPtr[batchShift + i]) <= 1)
+				{
+					// Hard-tanh (straight-through estimator)
+					_grads[batchShift + i] = std::max(-1.0, std::min(1.0, x));
+				}
+				else
+				{
+					// こっち側に来ることはないのでは？
+					_grads[batchShift + i] = 0;
+				}
+			}
+		}
 		_prevLayer.BatchBackward(nextLayerGrads);
 	}
 #pragma endregion

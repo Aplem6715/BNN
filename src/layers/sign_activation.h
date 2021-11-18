@@ -74,7 +74,17 @@ public:
 			int batchShift = b * kSettingInDim;
 			for (int i = 0; i < kSettingInDim; ++i)
 			{
-				_grads[batchShift + i] = std::max(-1.0, std::min(1.0, nextLayerGrads[batchShift + i]));
+				double g = nextLayerGrads[batchShift + i];
+				if (std::abs(_inputBufferPtr[batchShift + i]) <= 1)
+				{
+					// Hard-tanh (straight-through estimator)
+					_grads[batchShift + i] = std::max(-1.0, std::min(1.0, g));
+				}
+				else
+				{
+					// こっち側に来ることはないのでは？
+					_grads[batchShift + i] = 0;
+				}
 			}
 		}
 		_prevLayer.BatchBackward(_grads);
