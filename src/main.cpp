@@ -71,7 +71,7 @@ void Train(Network *net, int nbTrain)
 			teach[b * 2 + 1] = (x1 ^ x2) == 1 ? 128 : -128;
 		}
 
-		const int8_t *pred = net->BatchForward(input);
+		const int *pred = net->BatchForward(input);
 
 		for (int b = 0; b < BATCH_SIZE; b++)
 		{
@@ -107,7 +107,7 @@ double Test(Network *net, int nbTest)
 		double teach = x1 ^ x2;
 		input[0] = (x1 << 1) + x2;
 
-		const int8_t *pred = net->Forward(input);
+		const int *pred = net->Forward(input);
 
 		error += std::abs(teach - pred[0]);
 	}

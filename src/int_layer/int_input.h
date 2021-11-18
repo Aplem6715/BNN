@@ -22,7 +22,7 @@ public:
     {
         for (int i = 0; i < kSettingOutDim; i++)
         {
-            _outputBuffer[i] = netInput[i];
+            _outputBuffer[i] = netInput[i] == 0 ? -1 : 1;
         }
         return _outputBuffer;
     }

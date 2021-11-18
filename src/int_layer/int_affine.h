@@ -14,18 +14,18 @@ public:
 
 private:
     PrevLayer_t _prevLayer;
-    int8_t _outputBuffer[kSettingOutDim];
+    int _outputBuffer[kSettingOutDim];
     int8_t _weight[kSettingOutDim][kSettingInDim] = {0};
 
 #pragma region Train
-    int8_t _outputBatchBuffer[BATCH_SIZE * kSettingOutDim];
+    int _outputBatchBuffer[BATCH_SIZE * kSettingOutDim];
     int8_t *_inputBufferPtr;
     double _realWeight[kSettingOutDim][kSettingInDim] = {0};
     double _grads[BATCH_SIZE * kSettingInDim] = {0};
 #pragma endregion
 
 public:
-    const int8_t *Forward(const uint8_t *netInput)
+    const int *Forward(const uint8_t *netInput)
     {
         const int8_t *input = _prevLayer.Forward(netInput);
         // TODO
@@ -45,14 +45,14 @@ public:
     }
 
 #pragma region Train
-    int8_t *BatchForward(const uint8_t *netInput)
+    int *BatchForward(const uint8_t *netInput)
     {
         _inputBufferPtr = _prevLayer.BatchForward(netInput);
 
         for (int b = 0; b < BATCH_SIZE; ++b)
         {
             const int8_t *batchInput = &_inputBufferPtr[b * kSettingInDim];
-            int8_t *batchOutput = &_outputBatchBuffer[b * kSettingOutDim];
+            int *batchOutput = &_outputBatchBuffer[b * kSettingOutDim];
             for (int i_out = 0; i_out < kSettingOutDim; ++i_out)
             {
                 // パディング分も含めて±1積和演算

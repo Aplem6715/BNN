@@ -14,7 +14,7 @@ public:
 
 private:
     PrevLayer_t _prevLayer;
-    int8_t *_inputBufferPtr;
+    int *_inputBufferPtr;
     int8_t _outputBuffer[kSettingOutDim] = {0};
 
 #pragma region Train
@@ -48,12 +48,12 @@ public:
 
         for (int b = 0; b < BATCH_SIZE; b++)
         {
-            const int8_t *batchInput = &_inputBufferPtr[b * kSettingInDim];
+            const int *batchInput = &_inputBufferPtr[b * kSettingInDim];
             int8_t *batchOutput = &_outputBatchBuffer[b * kSettingOutDim];
             for (int out = 0; out < kSettingOutDim; ++out)
             {
                 // hard-tanh
-                double htanh = std::max(-1, std::min(1, (int)batchInput[out]));
+                double htanh = std::max(-1, std::min(1, batchInput[out]));
 
                 // binalized neurons
                 double probPositive = (htanh + 1.0) / 2.0;
