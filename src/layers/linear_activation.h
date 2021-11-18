@@ -13,9 +13,9 @@ public:
 	static constexpr int kSettingInDim = PrevLayer_t::kSettingOutDim;
 #pragma endregion
 
-	const IntType *Forward(const uint8_t *netInput)
+	const RealType *Forward(const uint8_t *netInput)
 	{
-		const IntType *input = _prevLayer.Forward(netInput);
+		const RealType *input = _prevLayer.Forward(netInput);
 
 		for (int i = 0; i < kSettingInDim; ++i)
 		{
@@ -30,17 +30,22 @@ public:
 	}
 
 #pragma region Train
-	IntType *BatchForward(const uint8_t *netInput)
+	RealType *BatchForward(const uint8_t *netInput)
 	{
 		_inputBufferPtr = _prevLayer.BatchForward(netInput);
 
 		for (int b = 0; b < BATCH_SIZE; b++)
 		{
-			double *batchInput = &_inputBufferPtr[b * kSettingInDim];
-			IntType *batchOutput = &_outputBatchBuffer[b * kSettingInDim];
+			const RealType *batchInput = &_inputBufferPtr[b * kSettingInDim];
+			RealType *batchOutput = &_outputBatchBuffer[b * kSettingInDim];
 			for (int i = 0; i < kSettingInDim; ++i)
 			{
-				batchOutput[i] = batchInput[i] > 0.5 ? 1 : -1;
+				double htanh = std::max(-1.0, std::min(1.0, batchInput[i]));
+
+				// 決定的
+				double tmp = (htanh + 1.0) / 2.0 - 0.5;
+				double sign = (tmp > 0) ? 1 : -1;
+				batchOutput[i] = sign;
 			}
 		}
 		return _outputBatchBuffer;
@@ -53,15 +58,15 @@ public:
 			int batchShift = b * kSettingInDim;
 			for (int i = 0; i < kSettingInDim; ++i)
 			{
-				double x = nextLayerGrads[batchShift + i];
+				double g = nextLayerGrads[batchShift + i];
+				
+				// d_Hard-tanh
 				if (std::abs(_inputBufferPtr[batchShift + i]) <= 1)
 				{
-					// Hard-tanh (straight-through estimator)
-					_grads[batchShift + i] = std::max(-1.0, std::min(1.0, x));
+					_grads[batchShift + i] = g;
 				}
 				else
 				{
-					// こっち側に来ることはないのでは？
 					_grads[batchShift + i] = 0;
 				}
 			}
@@ -72,11 +77,11 @@ public:
 
 private:
 	PrevLayer_t _prevLayer;
-	IntType _outputBuffer[kSettingInDim];
+	RealType _outputBuffer[kSettingInDim];
 
 #pragma region Train
-	double *_inputBufferPtr;
-	IntType _outputBatchBuffer[BATCH_SIZE * kSettingInDim];
+	RealType *_inputBufferPtr;
+	RealType _outputBatchBuffer[BATCH_SIZE * kSettingInDim];
 	double _grads[BATCH_SIZE * kSettingInDim];
 #pragma endregion
 };

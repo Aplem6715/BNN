@@ -33,7 +33,22 @@ public:
 	static constexpr int kPaddingInBits = kPaddedInBits - kSettingInBits;
 #pragma endregion
 
-	const int *Forward(const uint8_t *netInput)
+private:
+	PrevLayer_t _prevLayer;
+	RealType _outputBuffer[kSettingOutDim];
+	ByteType _weight[kSettingOutDim][kPaddedInBlocks] = {0};
+	double _bias[kSettingOutDim] = {0};
+
+#pragma region Train
+	RealType _outputBatchBuffer[BATCH_SIZE * kSettingOutDim];
+	BitType *_inputBufferPtr;
+	double _realWeight[kSettingOutDim][kPaddedInBlocks] = {0};
+	double _weightDiff[BATCH_SIZE][kSettingOutDim][kSettingInBits] = {0};
+	double _grads[BATCH_SIZE * kSettingInDim] = {0};
+#pragma endregion
+
+public:
+	const RealType *Forward(const uint8_t *netInput)
 	{
 		const BitType *input = _prevLayer.Forward(netInput);
 		// TODO
@@ -44,7 +59,8 @@ public:
 	{
 		for (int i_out = 0; i_out < kSettingOutDim; ++i_out)
 		{
-			for (int block = 0; block < kSettingInBlocks; ++block)
+			_bias[i_out] = 0;
+			for (int block = 0; block < kPaddedInBlocks; ++block)
 			{
 				_weight[i_out][block] = 0;
 			}
@@ -66,14 +82,14 @@ public:
 	}
 
 #pragma region Train
-	double *BatchForward(const uint8_t *netInput)
+	RealType *BatchForward(const uint8_t *netInput)
 	{
 		_inputBufferPtr = _prevLayer.BatchForward(netInput);
 
 		for (int b = 0; b < BATCH_SIZE; ++b)
 		{
 			const BitType *batchInput = &_inputBufferPtr[b * BATCH_SIZE];
-			double *batchOutput = &_outputBatchBuffer[b * BATCH_SIZE];
+			RealType *batchOutput = &_outputBatchBuffer[b * BATCH_SIZE];
 			for (int i_out = 0; i_out < kSettingOutDim; ++i_out)
 			{
 				// パディング分も含めて±1積和演算
@@ -84,8 +100,7 @@ public:
 					pop += __popcnt64(xnor); // 8bitで十分だけど後々256bit演算になるので
 				}
 
-				// 学習時は確率論的Activationを行うので，立っているビットの割合を出力
-				batchOutput[i_out] = (pop - kPaddingInBits) / (double)kSettingInDim;
+				batchOutput[i_out] = (2 * (pop - kPaddingInBits) - kSettingInDim) + _bias[i_out];
 			}
 		}
 
@@ -108,17 +123,23 @@ public:
 				{
 					uint8_t w_bit = (_weight[out][block] >> shift) & 0x1;
 					sum += nextBatchGrad[out] * (w_bit == 1 ? 1 : -1);
-					// sum += nextBatchGrad[out] * _realWeight[out][in];
 				}
 				grads[in] = sum;
 			}
 		}
 
-		// 重み調整幅を計算
 		for (int batch = 0; batch < BATCH_SIZE; ++batch)
 		{
 			const double *nextBatchGrad = &nextLayerGrads[batch * kSettingOutDim];
 			const BitType *batchInput = &_inputBufferPtr[batch * kSettingInBits];
+
+			// バイアスの調整(重みとループを分けて最適化されやすくしている)
+			for (int out = 0; out < kSettingOutDim; out++)
+			{
+				_bias[out] += nextBatchGrad[out];
+			}
+
+			// 重み調整幅を計算
 			for (int out = 0; out < kSettingOutDim; out++)
 			{
 				for (int in = 0; in < kSettingInBits; in++)
@@ -158,19 +179,6 @@ public:
 
 		_prevLayer.BatchBackward(_grads);
 	}
-#pragma endregion
-
-private:
-	PrevLayer_t _prevLayer;
-	int _outputBuffer[kSettingOutDim];
-	ByteType _weight[kSettingOutDim][kPaddedInBlocks] = {0};
-
-#pragma region Train
-	double _outputBatchBuffer[BATCH_SIZE * kSettingOutDim];
-	BitType *_inputBufferPtr;
-	double _realWeight[kSettingOutDim][kPaddedInBlocks] = {0};
-	double _weightDiff[BATCH_SIZE][kSettingOutDim][kSettingInBits] = {0};
-	double _grads[BATCH_SIZE * kSettingInDim] = {0};
 #pragma endregion
 };
 

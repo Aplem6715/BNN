@@ -49,7 +49,8 @@ void Train(Network *net, int nbTrain)
 {
 	uint8_t input[BATCH_SIZE * 1] = {0};
 	double diff[BATCH_SIZE * 2];
-	double lr = 0.01;
+	double lr = 0.001;
+	double total_loss = 0;
 	for (int i = 0; i < nbTrain; i++)
 	{
 		int x1 = GetRandUInt() % 2;
@@ -58,29 +59,33 @@ void Train(Network *net, int nbTrain)
 		teach[0] = (x1 ^ x2) == 0 ? 1 : -1;
 		teach[1] = (x1 ^ x2) == 1 ? 1 : -1;
 		input[0] = (uint8_t)(x1 << 7) + (uint8_t)(x2 << 6);
-		const int *pred = net->BatchForward(input);
+		const double *pred = net->BatchForward(input);
 
 		double loss = 0;
 		for (int i = 0; i < 2; i++)
 		{
 			double t = teach[i];
 			double y = pred[i];
-			if (1 - t * y <= 0)
-			{
-				diff[i] = 0;
-			}
-			else
-			{
-				double d = (2 * t * (t * y - 1));
-				// d = std::max(-1.0, std::min(1.0, d));
-				diff[i] = lr * d;
-			}
-			loss += std::max(0.0, 1 - t * y);
+			// if (1 - t * y <= 0)
+			// {
+			// 	diff[i] = 0;
+			// }
+			// else
+			// {
+			// 	// double d = (t * (t * y - 1));
+			// 	// d = std::max(-1.0, std::min(1.0, d));
+			// 	// diff[i] = lr * -d;
+				diff[i] = t - y;
+			// }
+			// loss += std::max(0.0, 1 - t * y);
+			loss += (y - t) * (y - t) * 0.5;
 		}
 		loss /= 2.0;
 		net->BatchBackward(diff);
-		std::cout << pred[0] << " - " << loss << std::endl;
+		// std::cout << pred[0] << " - " << loss << std::endl;
+		total_loss += loss;
 	}
+	std::cout << total_loss << std::endl;
 }
 
 double Test(Network *net, int nbTest)
@@ -95,7 +100,7 @@ double Test(Network *net, int nbTest)
 		double teach = x1 ^ x2;
 		input[0] = (x1 << 1) + x2;
 
-		const int *pred = net->Forward(input);
+		const double *pred = net->Forward(input);
 
 		error += std::abs(teach - pred[0]);
 	}
@@ -109,9 +114,9 @@ int main(int, char **)
 	Network net;
 	net.ResetWeight();
 
-	for (int i = 0; i < 1; i++)
+	for (int i = 0; i < 10; i++)
 	{
-		Train(&net, 1000);
+		Train(&net, 10000);
 		// std::cout << Test(&net, 100) << std::endl;
 	}
 

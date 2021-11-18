@@ -24,7 +24,7 @@ public:
 
 	const BitType *Forward(const uint8_t *netInput)
 	{
-		const IntType *input = _prevLayer.Forward(netInput);
+		const RealType *input = _prevLayer.Forward(netInput);
 
 		ClearOutBuffer();
 
@@ -32,7 +32,8 @@ public:
 		{
 			int block = GetBlockIndex(i);
 			int shift = GetBitIndexInBlock(i);
-			uint8_t sign = input[i] > 0 ? 1 : 0;
+			double htanh = std::max(-1.0, std::min(1.0, input[i]));
+			uint8_t sign = (htanh - 0.5) > 0;
 			_outputBuffer[block] |= sign << shift;
 		}
 		return _outputBuffer;
@@ -52,14 +53,18 @@ public:
 
 		for (int b = 0; b < BATCH_SIZE; b++)
 		{
-			const double *batchInput = &_inputBufferPtr[b * kSettingInDim];
+			const RealType *batchInput = &_inputBufferPtr[b * kSettingInDim];
 			BitType *batchOutput = &_outputBatchBuffer[b * kSettingInDim];
 			for (int i = 0; i < kSettingInDim; ++i)
 			{
 				int block = GetBlockIndex(i);
 				int shift = GetBitIndexInBlock(i);
-				// 確率論的Activation
-				double probPositive = batchInput[i];
+
+				// hard-tanh
+				double htanh = std::max(-1.0, std::min(1.0, batchInput[i]));
+
+				// binalized neurons
+				double probPositive = (htanh + 1.0) / 2.0;
 				uint8_t sign = GetRandReal() < probPositive;
 				batchOutput[block] |= sign << shift;
 			}
@@ -75,14 +80,14 @@ public:
 			for (int i = 0; i < kSettingInDim; ++i)
 			{
 				double g = nextLayerGrads[batchShift + i];
+
+				// d_Hard-tanh
 				if (std::abs(_inputBufferPtr[batchShift + i]) <= 1)
 				{
-					// Hard-tanh (straight-through estimator)
-					_grads[batchShift + i] = std::max(-1.0, std::min(1.0, g));
+					_grads[batchShift + i] = g;
 				}
 				else
 				{
-					// こっち側に来ることはないのでは？
 					_grads[batchShift + i] = 0;
 				}
 			}

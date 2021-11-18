@@ -14,7 +14,7 @@ void RandomSeed(int seed){
 	Random::mt = std::mt19937(seed);
 }
 
-// 0~1の実数乱数を取得
+// [0~1)の実数乱数を取得
 double GetRandReal()
 {
 	return Random::rnd_prob01(Random::mt);
