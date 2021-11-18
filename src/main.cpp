@@ -65,23 +65,24 @@ void Train(Network *net, int nbTrain)
 
 		const double *pred = net->BatchForward(input);
 
-		double loss = 0;
 		for (int b = 0; b < BATCH_SIZE; b++)
 		{
+			double loss = 0;
 			for (int j = 0; j < 2; j++)
 			{
 				int idx = b * 2 + j;
 				double y = pred[idx];
 				double t = teach[idx];
-				diff[idx] = y - t;
+				diff[idx] = t - y;
 				loss += (y - t) * (y - t) * 0.5;
 			}
+			loss /= 2.0;
+			total_loss += loss;
 		}
-		loss /= BATCH_SIZE * 2.0;
-		total_loss += loss;
+		total_loss /= BATCH_SIZE;
 
 		net->BatchBackward(diff);
-		// std::cout << pred[0] << " - " << loss << std::endl;
+		std::cout << pred[0] << " - " << total_loss << std::endl;
 	}
 	std::cout << total_loss << std::endl;
 }

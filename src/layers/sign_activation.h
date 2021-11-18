@@ -9,26 +9,34 @@ template <typename PrevLayer_t>
 class SignActivation
 {
 public:
-#pragma region 出力サイズ関連
 	static constexpr int kSettingOutDim = PrevLayer_t::kSettingOutDim;
-	// 出力ビット幅（ニューロン数）
-	static constexpr int kSettingOutBits = PrevLayer_t::kSettingOutDim;
-	// 出力バイト数
-	static constexpr int kSettingOutBytes = BitToByteSize(kSettingOutBits);
-#pragma endregion
-
-#pragma region 入力サイズ関連(前の層の値を引き継ぐ)
+	// 出力ビット幅
+	static constexpr int kSettingOutBits = kSettingOutDim;
+	// SIMDパディング付き出力ビット幅
+	static constexpr int kPaddedOutBits = AddPaddingBitSize(kSettingOutDim);
+	// SIMDパディング付き出力バイト数
+	static constexpr int kPaddedOutBytes = BitToByteSize(kPaddedOutBits);
 	// 入力次元数
 	static constexpr int kSettingInDim = PrevLayer_t::kSettingOutDim;
+
+private:
+	PrevLayer_t _prevLayer;
+	RealType *_inputBufferPtr;
+	BitType _outputBuffer[kPaddedOutBytes] = {0};
+
+#pragma region Train
+	BitType _outputBatchBuffer[BATCH_SIZE * kPaddedOutBytes] = {0};
+	double _grads[BATCH_SIZE * kSettingInDim];
 #pragma endregion
 
+public:
 	const BitType *Forward(const uint8_t *netInput)
 	{
 		const RealType *input = _prevLayer.Forward(netInput);
 
 		ClearOutBuffer();
 
-		for (int i = 0; i < kSettingInDim; ++i)
+		for (int i = 0; i < kSettingOutBits; ++i)
 		{
 			int block = GetBlockIndex(i);
 			int shift = GetBitIndexInBlock(i);
@@ -54,8 +62,8 @@ public:
 		for (int b = 0; b < BATCH_SIZE; b++)
 		{
 			const RealType *batchInput = &_inputBufferPtr[b * kSettingInDim];
-			BitType *batchOutput = &_outputBatchBuffer[b * kSettingInDim];
-			for (int i = 0; i < kSettingInDim; ++i)
+			BitType *batchOutput = &_outputBatchBuffer[b * kPaddedOutBytes];
+			for (int i = 0; i < kSettingOutBits; ++i)
 			{
 				int block = GetBlockIndex(i);
 				int shift = GetBitIndexInBlock(i);
@@ -76,8 +84,8 @@ public:
 	{
 		for (int b = 0; b < BATCH_SIZE; ++b)
 		{
-			int batchShift = b * kSettingInDim;
-			for (int i = 0; i < kSettingInDim; ++i)
+			int batchShift = b * kSettingOutDim;
+			for (int i = 0; i < kSettingOutDim; ++i)
 			{
 				double g = nextLayerGrads[batchShift + i];
 
@@ -94,31 +102,26 @@ public:
 		}
 		_prevLayer.BatchBackward(_grads);
 	}
-#pragma endregion
 
 private:
-	PrevLayer_t _prevLayer;
-	RealType *_inputBufferPtr;
-	BitType _outputBuffer[kSettingOutBytes] = {0};
+#pragma endregion
+
 	void ClearOutBuffer()
 	{
-		for (int i = 0; i < kSettingOutBytes; i++)
+		for (int i = 0; i < kPaddedOutBytes; i++)
 		{
 			_outputBuffer[i] = 0;
 		}
 	}
 
 #pragma region Train
-	BitType _outputBatchBuffer[BATCH_SIZE * kSettingOutDim] = {0};
-	double _grads[BATCH_SIZE * kSettingInDim];
-
 	void ClearOutBatchBuffer()
 	{
 		for (int b = 0; b < BATCH_SIZE; ++b)
 		{
-			for (int i = 0; i < kSettingOutBytes; i++)
+			for (int i = 0; i < kPaddedOutBytes; i++)
 			{
-				_outputBuffer[b * kSettingOutBytes + i] = 0;
+				_outputBuffer[b * kPaddedOutBytes + i] = 0;
 			}
 		}
 	}

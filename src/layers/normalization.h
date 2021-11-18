@@ -14,7 +14,8 @@ public:
 	static constexpr int kSettingInDim = PrevLayer_t::kSettingOutDim;
 
 private:
-	static constexpr double kSmallValue = 0.0000001;
+	static constexpr double kLearningRate = 0.001;
+	static constexpr double kSmallValue = 0.00001;
 	static constexpr double kMomentum = MomentumMilli / 1000.0;
 
 	PrevLayer_t _prevLayer;
@@ -22,19 +23,19 @@ private:
 	RealType _outputBuffer[kSettingOutDim] = {0};
 
 	// スケール補正
-	double _gamma[kSettingInDim];
+	double _gamma[kSettingInDim] = {0};
 	// バイアス
-	double _beta[kSettingInDim];
+	double _beta[kSettingInDim] = {0};
 
 	// 訓練用保持変数
-	double _normed_in[BATCH_SIZE][kSettingInDim];
-	double _centered_in[BATCH_SIZE][kSettingInDim];
-	double _std[kSettingInDim];
+	double _normed_in[BATCH_SIZE][kSettingInDim] = {0};
+	double _centered_in[BATCH_SIZE][kSettingInDim] = {0};
+	double _std[kSettingInDim] = {0};
 
 	// 訓練済み平均
-	double _trained_mean[kSettingInDim];
+	double _trained_mean[kSettingInDim] = {0};
 	// 訓練済み分散
-	double _trained_var[kSettingInDim];
+	double _trained_var[kSettingInDim] = {0};
 
 #pragma region Train
 	RealType _outputBatchBuffer[BATCH_SIZE * kSettingOutDim] = {0};
@@ -85,9 +86,9 @@ public:
 			for (int b = 0; b < BATCH_SIZE; b++)
 			{
 				const int idx = b * kSettingInDim + i;
-				const double cx = _inputBufferPtr[idx] - mu;
-				_centered_in[b][i] = cx;
-				var += cx * cx;
+				const double xc = _inputBufferPtr[idx] - mu;
+				_centered_in[b][i] = xc;
+				var += xc * xc;
 			}
 			var /= BATCH_SIZE;
 			_std[i] = std::sqrt(var + kSmallValue);
@@ -122,9 +123,8 @@ public:
 			{
 				int idx = i + b * kSettingInDim;
 				double grad = nextLayerGrads[idx];
-				double normed_in = _normed_in[b][i];
 				d_beta += grad;
-				d_gamma += normed_in * grad;
+				d_gamma += _normed_in[b][i] * grad;
 
 				double d_normed_in = _gamma[i] * grad;
 				d_centered_in = d_normed_in / _std[i];
@@ -144,8 +144,8 @@ public:
 				_grads[b * kSettingInDim + i] = d_centered_in - d_mu / BATCH_SIZE;
 			}
 
-			_gamma[i] += d_gamma;
-			_beta[i] += d_beta;
+			// _gamma[i] += kLearningRate * d_gamma;
+			// _beta[i] += kLearningRate * d_beta;
 		}
 		_prevLayer.BatchBackward(_grads);
 	}
