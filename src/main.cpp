@@ -5,9 +5,8 @@
 #include "util/mnist_trans.h"
 
 using Input = IntInputLayer<2>;
-using Hidden1 = IntSignActivation<IntAffineLayer<Input, 512>>;
-using Hidden2 = IntSignActivation<IntAffineLayer<Hidden1, 256>>;
-using OutLayer = IntAffineLayer<Hidden2, 2>;
+using Hidden1 = IntSignActivation<IntAffineLayer<Input, 16>>;
+using OutLayer = IntAffineLayer<Hidden1, 2>;
 using Network = OutLayer;
 
 // using Input = BitInputLayer<2>;
@@ -67,8 +66,8 @@ void Train(Network *net, int nbTrain)
 			// input[b] = (uint8_t)(x1 << 7) + (uint8_t)(x2 << 6);
 			input[b * 2] = x1;
 			input[b * 2 + 1] = x2;
-			teach[b * 2] = (x1 ^ x2) == 0 ? 128 : -128;
-			teach[b * 2 + 1] = (x1 ^ x2) == 1 ? 128 : -128;
+			teach[b * 2] = (x1 & x2) == 0 ? 5 : -5;
+			teach[b * 2 + 1] = (x1 & x2) == 1 ? 5 : -5;
 		}
 
 		const int *pred = net->BatchForward(input);
@@ -81,9 +80,9 @@ void Train(Network *net, int nbTrain)
 				int idx = b * 2 + j;
 				double y = pred[idx];
 				double t = teach[idx];
-				diff[idx] = t - y;
+				diff[idx] = lr * (t - y);
 				loss += (y - t) * (y - t) * 0.5;
-				// std::cout << y << " : " << t << std::endl;
+				std::cout << y << " : " << t << std::endl;
 			}
 			loss /= 2.0;
 			total_loss += loss;
@@ -123,7 +122,7 @@ int main(int, char **)
 
 	for (int i = 0; i < 100; i++)
 	{
-		Train(&net, 100);
+		Train(&net, 50);
 		// std::cout << Test(&net, 100) << std::endl;
 	}
 

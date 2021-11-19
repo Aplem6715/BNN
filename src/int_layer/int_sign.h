@@ -68,15 +68,19 @@ public:
     {
         for (int b = 0; b < BATCH_SIZE; ++b)
         {
-            int batchShift = b * kSettingOutDim;
-            for (int i = 0; i < kSettingOutDim; ++i)
+            int batchShift = b * kSettingInDim;
+            for (int i = 0; i < kSettingInDim; ++i)
             {
-                double g = nextLayerGrads[batchShift + i];
+                double sum = 0;
+                for (int out = 0; out < kSettingOutDim; ++out)
+                {
+                    sum += nextLayerGrads[b * kSettingOutDim + out];
+                }
 
                 // d_Hard-tanh
                 if (std::abs(_inputBufferPtr[batchShift + i]) <= 1)
                 {
-                    _grads[batchShift + i] = g;
+                    _grads[batchShift + i] = sum;
                 }
                 else
                 {
