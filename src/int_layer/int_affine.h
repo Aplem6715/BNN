@@ -16,6 +16,7 @@ private:
     PrevLayer_t _prevLayer;
     int _outputBuffer[kSettingOutDim];
     int8_t _weight[kSettingOutDim][kSettingInDim] = {0};
+	RealType _bias[kSettingOutDim] = {0};
 
 #pragma region Train
     int _outputBatchBuffer[kSettingOutDim];
@@ -36,8 +37,9 @@ public:
     {
         for (int i_out = 0; i_out < kSettingOutDim; ++i_out)
         {
-            for (int in = 0; in < kSettingInDim; ++in)
-            {
+			_bias[i_out] = 0;
+			for (int in = 0; in < kSettingInDim; ++in)
+			{
                 _weight[i_out][in] = GetRandReal() > 0.5 ? 1 : -1;
             }
         }
@@ -52,11 +54,10 @@ public:
 		for (int i_out = 0; i_out < kSettingOutDim; ++i_out)
 		{
 			// パディング分も含めて±1積和演算
-			int sum = 0;
+			int sum = _bias[i_out];
 			for (int in = 0; in < kSettingInDim; ++in)
 			{
-				// sum += _inputBufferPtr[in] * _weight[i_out][in];
-				sum += _inputBufferPtr[in] * _realWeight[i_out][in];
+				sum += _inputBufferPtr[in] * _weight[i_out][in];
 			}
 
 			_outputBatchBuffer[i_out] = sum;
@@ -73,8 +74,7 @@ public:
 			double sum = 0;
 			for (int out = 0; out < kSettingOutDim; ++out)
 			{
-				// sum += nextLayerGrads[out] * _weight[out][in];
-				sum += nextLayerGrads[out] * _realWeight[out][in];
+				sum += nextLayerGrads[out] * _weight[out][in];
 			}
 			_grads[in] = sum;
 		}
@@ -82,6 +82,7 @@ public:
 		// 重み調整幅を計算
 		for (int out = 0; out < kSettingOutDim; out++)
 		{
+			_bias[out] += nextLayerGrads[out];
 			for (int in = 0; in < kSettingInDim; in++)
 			{
 				_realWeight[out][in] += nextLayerGrads[out] * _inputBufferPtr[in];

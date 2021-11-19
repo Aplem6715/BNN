@@ -5,9 +5,9 @@
 #include "util/mnist_trans.h"
 
 using Input = IntInputLayer<2>;
-using Hidden1 = IntSignActivation<IntAffineLayer<Input, 16>>;
-// using Hidden2 = IntSignActivation<IntAffineLayer<Hidden1, 16>>;
-using OutLayer = IntAffineLayer<Hidden1, 1>;
+using Hidden1 = IntSignActivation<IntAffineLayer<Input, 32>>;
+using Hidden2 = IntSignActivation<IntAffineLayer<Hidden1, 16>>;
+using OutLayer = IntAffineLayer<Hidden2, 1>;
 using Network = OutLayer;
 
 // using Input = BitInputLayer<2>;
@@ -58,7 +58,7 @@ void Train(Network *net, int nbTrain)
 	double diff[2];
 	double lr = 0.001;
 	double total_loss = 0;
-	double scale = 10;
+	double scale = 16;
 	for (int i = 0; i < nbTrain; i++)
 	{
 		// for (int b = 0; b < BATCH_SIZE; b++)
@@ -121,12 +121,12 @@ double Test(Network *net, int nbTest)
 int main(int, char **)
 {
 	RandomSeed(42);
-	RealNetwork net;
+	Network net;
 	net.ResetWeight();
 
-	for (int i = 0; i < 10000; i++)
+	for (int i = 0; i <200; i++)
 	{
-		TrainReal(&net, 10);
+		Train(&net, 200);
 		// std::cout << Test(&net, 100) << std::endl;
 	}
 
