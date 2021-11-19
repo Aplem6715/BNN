@@ -68,7 +68,7 @@ void Train(Network *net, int nbTrain)
 		// input[b] = (uint8_t)(x1 << 7) + (uint8_t)(x2 << 6);
 		input[0] = (x1 == 0) ? -1 : 1;
 		input[1] = (x2 == 0) ? -1 : 1;
-		teach[0] = ((x1 & x2) == 0) ? scale : -scale;
+		teach[0] = ((x1 ^ x2) == 0) ? scale : -scale;
 		// teach[1] = ((x1 & x2) == 0) ? scale : -scale;
 		// }
 
