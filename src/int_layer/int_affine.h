@@ -18,10 +18,10 @@ private:
     int8_t _weight[kSettingOutDim][kSettingInDim] = {0};
 
 #pragma region Train
-    int _outputBatchBuffer[BATCH_SIZE * kSettingOutDim];
+    int _outputBatchBuffer[kSettingOutDim];
     int8_t *_inputBufferPtr;
     double _realWeight[kSettingOutDim][kSettingInDim] = {0};
-    double _grads[BATCH_SIZE * kSettingInDim] = {0};
+    double _grads[kSettingInDim] = {0};
 #pragma endregion
 
 public:
@@ -45,80 +45,64 @@ public:
     }
 
 #pragma region Train
-    int *BatchForward(const uint8_t *netInput)
-    {
-        _inputBufferPtr = _prevLayer.BatchForward(netInput);
+	int *BatchForward(const int8_t *netInput)
+	{
+		_inputBufferPtr = _prevLayer.BatchForward(netInput);
 
-        for (int b = 0; b < BATCH_SIZE; ++b)
-        {
-            const int8_t *batchInput = &_inputBufferPtr[b * kSettingInDim];
-            int *batchOutput = &_outputBatchBuffer[b * kSettingOutDim];
-            for (int i_out = 0; i_out < kSettingOutDim; ++i_out)
-            {
-                // パディング分も含めて±1積和演算
-                int sum = 0;
-                for (int in = 0; in < kSettingInDim; ++in)
-                {
-                    sum += batchInput[in] * _weight[i_out][in];
-                }
+		for (int i_out = 0; i_out < kSettingOutDim; ++i_out)
+		{
+			// パディング分も含めて±1積和演算
+			int sum = 0;
+			for (int in = 0; in < kSettingInDim; ++in)
+			{
+				// sum += _inputBufferPtr[in] * _weight[i_out][in];
+				sum += _inputBufferPtr[in] * _realWeight[i_out][in];
+			}
 
-                batchOutput[i_out] = sum;
-            }
-        }
+			_outputBatchBuffer[i_out] = sum;
+		}
 
-        return _outputBatchBuffer;
-    }
+		return _outputBatchBuffer;
+	}
 
-    void BatchBackward(const double *nextLayerGrads)
-    {
-        // 勾配更新
-        for (int batch = 0; batch < BATCH_SIZE; ++batch)
-        {
-            const double *nextBatchGrad = &nextLayerGrads[batch * kSettingOutDim];
-            double *grads = &_grads[batch * kSettingInDim];
-            for (int in = 0; in < kSettingInDim; ++in)
-            {
-                double sum = 0;
-                for (int out = 0; out < kSettingOutDim; ++out)
-                {
-                    sum += nextBatchGrad[out] * _weight[out][in];
-                }
-                grads[in] = sum;
-            }
-        }
+	void BatchBackward(const double *nextLayerGrads)
+	{
+		// 勾配更新
+		for (int in = 0; in < kSettingInDim; ++in)
+		{
+			double sum = 0;
+			for (int out = 0; out < kSettingOutDim; ++out)
+			{
+				// sum += nextLayerGrads[out] * _weight[out][in];
+				sum += nextLayerGrads[out] * _realWeight[out][in];
+			}
+			_grads[in] = sum;
+		}
 
-        for (int batch = 0; batch < BATCH_SIZE; ++batch)
-        {
-            const double *nextBatchGrad = &nextLayerGrads[batch * kSettingOutDim];
-            const int8_t *batchInput = &_inputBufferPtr[batch * kSettingInDim];
+		// 重み調整幅を計算
+		for (int out = 0; out < kSettingOutDim; out++)
+		{
+			for (int in = 0; in < kSettingInDim; in++)
+			{
+				_realWeight[out][in] += nextLayerGrads[out] * _inputBufferPtr[in];
+			}
+		}
 
-            // 重み調整幅を計算
-            for (int out = 0; out < kSettingOutDim; out++)
-            {
-                for (int in = 0; in < kSettingInDim; in++)
-                {
-                    _realWeight[out][in] += nextBatchGrad[out] * batchInput[in];
-                }
-            }
-        }
+		// 重み更新
+		for (int out = 0; out < kSettingOutDim; out++)
+		{
+			for (int in = 0; in < kSettingInDim; in++)
+			{
+				// Clipping
+				double tmp_w = std::max(-1.0, std::min(1.0, _realWeight[out][in]));
+				_realWeight[out][in] = tmp_w;
 
-        // 重み更新
-        for (int out = 0; out < kSettingOutDim; out++)
-        {
-            int8_t *weight = _weight[out];
-            for (int in = 0; in < kSettingInDim; in++)
-            {
-                // Clipping
-                double tmp_w = _realWeight[out][in];
-                tmp_w = std::max(-1.0, std::min(1.0, tmp_w));
-                _realWeight[out][in] = tmp_w;
+				_weight[out][in] = (tmp_w > 0) ? 1 : -1;
+			}
+		}
 
-                weight[in] = (tmp_w > 0) ? 1 : -1;
-            }
-        }
-
-        _prevLayer.BatchBackward(_grads);
-    }
+		_prevLayer.BatchBackward(_grads);
+	}
 #pragma endregion
 };
 

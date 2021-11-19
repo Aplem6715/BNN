@@ -8,9 +8,7 @@ template <typename PrevLayer_t>
 class IntSignActivation
 {
 public:
-    static constexpr int kSettingOutDim = PrevLayer_t::kSettingOutDim;
-    // 入力次元数
-    static constexpr int kSettingInDim = PrevLayer_t::kSettingOutDim;
+	static constexpr int kSettingOutDim = PrevLayer_t::kSettingOutDim;
 
 private:
     PrevLayer_t _prevLayer;
@@ -18,8 +16,8 @@ private:
     int8_t _outputBuffer[kSettingOutDim] = {0};
 
 #pragma region Train
-    int8_t _outputBatchBuffer[BATCH_SIZE * kSettingOutDim] = {0};
-    double _grads[BATCH_SIZE * kSettingInDim];
+    int8_t _outputBatchBuffer[kSettingOutDim] = {0};
+	double _grads[kSettingOutDim];
 #pragma endregion
 
 public:
@@ -42,54 +40,42 @@ public:
     }
 
 #pragma region Train
-    int8_t *BatchForward(const uint8_t *netInput)
+	int8_t *BatchForward(const int8_t *netInput)
+	{
+		_inputBufferPtr = _prevLayer.BatchForward(netInput);
+
+		for (int out = 0; out < kSettingOutDim; ++out)
+		{
+			// hard-tanh
+			double htanh = std::max(-1, std::min(1, _inputBufferPtr[out]));
+
+			// binalized neurons
+			double probPositive = (htanh + 1.0) / 2.0;
+			bool sign = GetRandReal() < probPositive;
+			_outputBatchBuffer[out] = sign ? 1 : -1;
+		}
+
+		return _outputBatchBuffer;
+	}
+
+	void BatchBackward(const double *nextLayerGrads)
     {
-        _inputBufferPtr = _prevLayer.BatchForward(netInput);
+		for (int i = 0; i < kSettingOutDim; ++i)
+		{
+			double g = nextLayerGrads[i];
 
-        for (int b = 0; b < BATCH_SIZE; b++)
-        {
-            const int *batchInput = &_inputBufferPtr[b * kSettingInDim];
-            int8_t *batchOutput = &_outputBatchBuffer[b * kSettingOutDim];
-            for (int out = 0; out < kSettingOutDim; ++out)
-            {
-                // hard-tanh
-                double htanh = std::max(-1, std::min(1, batchInput[out]));
-
-                // binalized neurons
-                double probPositive = (htanh + 1.0) / 2.0;
-                bool sign = GetRandReal() < probPositive;
-                batchOutput[out] = sign ? 1 : -1;
-            }
-        }
-        return _outputBatchBuffer;
-    }
-
-    void BatchBackward(const double *nextLayerGrads)
-    {
-        for (int b = 0; b < BATCH_SIZE; ++b)
-        {
-            int batchShift = b * kSettingInDim;
-            for (int i = 0; i < kSettingInDim; ++i)
-            {
-                double sum = 0;
-                for (int out = 0; out < kSettingOutDim; ++out)
-                {
-                    sum += nextLayerGrads[b * kSettingOutDim + out];
-                }
-
-                // d_Hard-tanh
-                if (std::abs(_inputBufferPtr[batchShift + i]) <= 1)
-                {
-                    _grads[batchShift + i] = sum;
-                }
-                else
-                {
-                    _grads[batchShift + i] = 0;
-                }
-            }
-        }
-        _prevLayer.BatchBackward(_grads);
-    }
+			// d_Hard-tanh
+			if (std::abs(_inputBufferPtr[i]) <= 1)
+			{
+				_grads[i] = g;
+			}
+			else
+			{
+				_grads[i] = 0;
+			}
+		}
+		_prevLayer.BatchBackward(_grads);
+	}
 };
 
 #endif

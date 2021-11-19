@@ -18,6 +18,7 @@ private:
     PrevLayer_t _prevLayer;
     RealType _outputBuffer[kSettingOutDim];
     RealType _weight[kSettingOutDim][kSettingInDim] = {0};
+	RealType _bias[kSettingOutDim] = {0};
 
 #pragma region Train
     RealType _outputBatchBuffer[BATCH_SIZE * kSettingOutDim];
@@ -57,8 +58,8 @@ public:
             RealType *batchOutput = &_outputBatchBuffer[b * BATCH_SIZE];
             for (int i_out = 0; i_out < kSettingOutDim; ++i_out)
             {
-                double sum = 0;
-                for (int block = 0; block < kSettingInDim; ++block)
+				double sum = _bias[i_out];
+				for (int block = 0; block < kSettingInDim; ++block)
                 {
                     sum += batchInput[block] * _weight[i_out][block];
                 }
@@ -94,7 +95,8 @@ public:
             const RealType *batchInput = &_inputBufferPtr[batch * kSettingInDim];
             for (int out = 0; out < kSettingOutDim; out++)
             {
-                for (int in = 0; in < kSettingInDim; in++)
+				_bias[out] += nextBatchGrad[out];
+				for (int in = 0; in < kSettingInDim; in++)
                 {
                     _weight[out][in] += nextBatchGrad[out] * batchInput[in];
                 }

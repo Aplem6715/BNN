@@ -14,7 +14,7 @@ private:
     int8_t _outputBuffer[kSettingOutDim] = {0};
 
 #pragma region Train
-    int8_t _outputBatchBuffer[BATCH_SIZE * kSettingOutDim] = {0};
+    int8_t _outputBatchBuffer[kSettingOutDim] = {0};
 #pragma endregion
 
 public:
@@ -22,28 +22,24 @@ public:
     {
         for (int i = 0; i < kSettingOutDim; i++)
         {
-            _outputBuffer[i] = netInput[i] == 0 ? -1 : 1;
+            _outputBatchBuffer[i] = netInput[i] == 0 ? -1 : 1;
         }
-        return _outputBuffer;
+        return _outputBatchBuffer;
     }
 
     void ResetWeight() {}
 
 #pragma region Train
-    int8_t *BatchForward(const uint8_t *netInput)
-    {
-        for (int batch = 0; batch < BATCH_SIZE; ++batch)
-        {
-            int8_t *outputBuffer = &_outputBatchBuffer[batch * kSettingOutDim];
-            for (int i = 0; i < kSettingOutDim; ++i)
-            {
-                outputBuffer[i] = netInput[batch * kSettingOutDim + i];
-            }
-        }
-        return _outputBatchBuffer;
-    }
+	int8_t *BatchForward(const int8_t *netInput)
+	{
+		for (int out = 0; out < kSettingOutDim; ++out)
+		{
+			_outputBatchBuffer[out] = netInput[out];
+		}
+		return _outputBatchBuffer;
+	}
 
-    void BatchBackward(const double *nextLayerGrads)
+	void BatchBackward(const double *nextLayerGrads)
     {
         // 終端
     }

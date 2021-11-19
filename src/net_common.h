@@ -9,7 +9,7 @@ typedef uint8_t ByteType;
 typedef int IntType;
 typedef double RealType;
 
-constexpr int BATCH_SIZE = 32;
+constexpr int BATCH_SIZE = 1;
 
 constexpr int BIT_WIDTH = 8;
 constexpr int SIMD_BIT_WIDTH = 256; // AVX2
